@@ -4,4 +4,5 @@
 buenos
 tfstool
 fyams.harddisk
-*/tests/
+*/tests/halt
+*/tests/readwrite
