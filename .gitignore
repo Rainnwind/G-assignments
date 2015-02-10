@@ -1,0 +1,7 @@
+*.o
+*.d
+*.map
+buenos
+tfstool
+fyams.harddisk
+*/tests/
