@@ -50,6 +50,13 @@
  * @param user_context The userland context (CPU registers as they
  * where when system call instruction was called in userland)
  */
+
+#define A0 user_context->cpu_regs[MIPS_REGISTER_A0]
+#define A1 user_context->cpu_regs[MIPS_REGISTER_A1]
+#define A2 user_context->cpu_regs[MIPS_REGISTER_A2]
+#define A3 user_context->cpu_regs[MIPS_REGISTER_A3]
+#define V0 user_context->cpu_regs[MIPS_REGISTER_V0]
+
 void syscall_handle(context_t *user_context)
 {
     /* When a syscall is executed in userland, register a0 contains
@@ -61,21 +68,17 @@ void syscall_handle(context_t *user_context)
      * returning from this function the userland context will be
      * restored from user_context.
      */
-    uint32_t A0 = user_context->cpu_regs[MIPS_REGISTER_A0];
-    uint32_t A1 = user_context->cpu_regs[MIPS_REGISTER_A1];
-    uint32_t A2 = user_context->cpu_regs[MIPS_REGISTER_A2];
-    uint32_t A3 = user_context->cpu_regs[MIPS_REGISTER_A3];
-    //int V0 = user_context->cpu_regs[MIPS_REGISTER_V0];
+
     switch (A0)
     {
     case SYSCALL_HALT:
         halt_kernel();
         break;
     case SYSCALL_READ:
-        read_tty(A1, A2, A3);
+        V0 = syscall_read(A1, A2, A3);
         break;
     case SYSCALL_WRITE:
-        write_tty(A1, A2, A3);
+        V0 = syscall_write(A1, A2, A3);
         break;
     default:
         KERNEL_PANIC("Unhandled system call\n");
