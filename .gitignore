@@ -1,7 +1,8 @@
 *.o
 *.d
 *.map
-.buenos
+*.out
+*/buenos/buenos
 tfstool
 fyams.harddisk
 */tests/halt
