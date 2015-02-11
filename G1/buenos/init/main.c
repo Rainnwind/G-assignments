@@ -56,6 +56,8 @@
 #include "net/network.h"
 #include "proc/process.h"
 #include "vm/vm.h"
+#include "kernel/read.h"
+#include "kernel/write.h"
 
 /**
  * Fallback function for system startup. This function is executed

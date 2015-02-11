@@ -39,7 +39,7 @@
         .text
 	.align	2
 
-# interrupt_state_t _interrupt_disable(void); 
+# interrupt_state_t _interrupt_disable(void);
 	.globl	_interrupt_disable
 	.ent	_interrupt_disable
 
@@ -52,7 +52,7 @@ _interrupt_disable:
         .end    _interrupt_disable
 
 
-# interrupt_state_t _interrupt_enable(void); 
+# interrupt_state_t _interrupt_enable(void);
 	.globl	_interrupt_enable
 	.ent	_interrupt_enable
 
@@ -94,7 +94,7 @@ _interrupt_get_state:
 	.globl	_interrupt_generate_sw0
 	.ent	_interrupt_generate_sw0
 
-_interrupt_generate_sw0:	
+_interrupt_generate_sw0:
 	mfc0	t0, Cause, 0
 	li	t1, 0x00000100
 	or      t2, t0, t1
@@ -107,7 +107,7 @@ _interrupt_generate_sw0:
 	.globl	_interrupt_clear_sw
 	.ent	_interrupt_clear_sw
 
-_interrupt_clear_sw:	
+_interrupt_clear_sw:
 	mfc0	t0, Cause, 0
 	li	t1, 0xfffffcff
 	and     t2, t0, t1
@@ -121,7 +121,7 @@ _interrupt_clear_sw:
 	.globl	_interrupt_clear_sw0
 	.ent	_interrupt_clear_sw0
 
-_interrupt_clear_sw0:	
+_interrupt_clear_sw0:
 	mfc0	t0, Cause, 0
 	li	t1, 0xfffffeff
 	and     t2, t0, t1
@@ -134,7 +134,7 @@ _interrupt_clear_sw0:
 	.globl	_interrupt_clear_sw1
 	.ent	_interrupt_clear_sw1
 
-_interrupt_clear_sw1:	
+_interrupt_clear_sw1:
 	mfc0	t0, Cause, 0
 	li	t1, 0xfffffdff
 	and     t2, t0, t1
@@ -148,7 +148,7 @@ _interrupt_clear_sw1:
 	.globl	_interrupt_clear_bootstrap
 	.ent	_interrupt_clear_bootstrap
 
-_interrupt_clear_bootstrap:	
+_interrupt_clear_bootstrap:
 	mfc0	t0, Status, 0
 	li	t1, 0xffbffffb
 	and     t2, t0, t1
@@ -157,12 +157,12 @@ _interrupt_clear_bootstrap:
         .end    _interrupt_clear_bootstrap
 
 # /* Returns the CPU on which the calling code is running*/
-# int _interrupt_getcpu(void); 
+# int _interrupt_getcpu(void);
 
 	.globl	_interrupt_getcpu
 	.ent	_interrupt_getcpu
 
-_interrupt_getcpu:	
+_interrupt_getcpu:
 	_FETCH_CPU_NUM(v0)
 	j ra
         .end    _interrupt_getcpu
