@@ -1,0 +1,69 @@
+\documentclass[a4paper,12pt,danish]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[danish]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{makeidx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+\usepackage{pbox}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{multicol}
+\pagestyle{fancy}
+%Setting link borders to none
+\hypersetup{pdfborder = {0 0 0}}
+
+\fancyhead[C]{}
+\fancyhead[L]{}
+\fancyhead[R]{\footnotesize{
+Rane Eriksen \textsc{BVL193}\\
+Christian Efternavn \textsc{??????}\\
+Sebastian Efternavn \textsc{??????}}}
+
+\begin{document}
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.4mm}}
+\center
+\small{ \emph{Forfattere:}\\
+13.07-89 Rane Eriksen \textsc{BVL193}
+\\
+dd.mm-yy Christian Efternavn \textsc{nummerplade}
+\\
+dd.mm-yy Sebastian Efternavn \textsc{nummerpade}
+\\
+Hold 1} \\[2cm]
+
+\textsc{\LARGE Datalogisk Institut}\\[0.5cm]
+\textsc{\large Københavns Universitet}\\[1.5cm]
+\textsc{\large Lineær algebra for dataloger}\\
+\HRule \\[0.7cm]
+{\huge \bfseries G-Assignment 1}\\[0.4cm]
+\HRule \\[1.5cm]
+\textsc{\Large \textsc{\today}}\\[0.5cm]
+
+\includegraphics[scale=0.5]{ku_logo.png}\\[1cm]
+
+\end{titlepage}
+\tableofcontents
+\newpage
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thempfootnote}{\arabic{mpfootnote}}
+\renewcommand\thesubsection{}
+\newcommand{\minus}[1]{{#1}^{-}}
+\section{Task 1. A priority queue}
+\subsection{notes}
+\subsection{Implementation}
+\newpage
+\section{Task 2. Buenos system calls for basic I/O}
+\subsection{notes}
+\subsection{Implementation}
+\end{document}
