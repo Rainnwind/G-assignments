@@ -151,7 +151,7 @@ cleardisk = if [ -f fyams.harddisk ] ; \
 maketests = make -C tests/
 createdisk = util/tfstool create fyams.harddisk 2048 disk
 writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog)
-rundisk = fyams-sim buenos initprog=[disk]$(prog) debugreadwrite
+rundisk = fyams-sim buenos initprog=[disk]$(prog)
 readwrite: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
 

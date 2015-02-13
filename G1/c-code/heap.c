@@ -89,7 +89,7 @@ void heap_insert(heap *h, void *item, int priority)
             }
             else
             {
-                exit(4);
+                exit(2);
             }
         }
         //Inserting new element
@@ -115,7 +115,7 @@ void heap_insert(heap *h, void *item, int priority)
     }
     else
     {
-        exit(6);
+        exit(3);
     }
 }
 

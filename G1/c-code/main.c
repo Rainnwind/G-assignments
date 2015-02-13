@@ -156,6 +156,9 @@ void unit_test_heap_pop()
 
     node = heap_pop(&heap_max);
     printf("Expected NULL pointer - %s\n", node == NULL ? "Passed" : "Failed");
+
+    //Freeing the node since it's no longer needed.
+    free(node);
 }
 
 int main()
