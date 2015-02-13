@@ -141,6 +141,20 @@ clean:	utilclean
 real-clean: clean
 	rm -f $(DEPS)
 
+# Make commands for G2
+prog = halt
+cleardisk = if [ -f fyams.harddisk ] ; \
+	then \
+		rm fyams.harddisk; \
+	fi;
+maketests = make -C tests/
+createdisk = util/tfstool create fyams.harddisk 2048 disk
+writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog)
+rundisk = fyams-sim buenos initprog=[disk]$(prog)
+halt: all
+	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
+
+
 .PHONY: clean
 .PHONY: doc
 .PHONY: submit-archive buenos-g1.tar.gz

@@ -49,8 +49,10 @@ void process_start(const char *executable);
 #define PROCESS_MAX_PROCESSES 32
 
 typedef struct {
-    /* STUB: Put something here. */
-    int dummy; /* Remove this. */
+    char *name;
+    int state;
+    int counter; //Might not be needed
+    int priority; //Might not be needed
 } process_control_block_t;
 
 /* Initialize the process table.  This must be called during kernel startup
