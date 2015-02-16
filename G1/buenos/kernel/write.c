@@ -41,10 +41,6 @@ int syscall_write(uint32_t f_handle, uint32_t buffer_addr, uint32_t length)
         int i = 0;
         while (i < (int)length)
         {
-            if (cc[i] == '\0')
-            {
-                break;
-            }
             len = gcd->write(gcd, &cc[i], 1);
             written_len += len;
             i++;
