@@ -89,19 +89,19 @@ This makes it a good structure for a priority queue, and can be used to improve 
 initializes a new heap by allocating size for the root of the array and sets the size of the heap to zero which is used to indicate how many entries the root contains.
 
 \subsubsection{void heap\_clear(heap *h)}
-frees the allocated memory used by the heap and sets the "initialized" variable in the heap to zero - This is used to determine if a heap is correctly initialized in every other function other than insert.
+frees the allocated memory used by the heap and sets the "initialized" variable in the heap to zero. This is used to determine if a heap is correctly initialized in every other function other than insert.
 
 \subsubsection{size\_t heap\_size(heap *h)}
 returns the size of the heap which is the count of inserted nodes in the root.
 
 \subsubsection{void *heap\_top(heap *h)}
-Returns the root node of the heap which is also the node with the highest priority.
+returns the root node of the heap which is also the node with the highest priority.
 
 \subsubsection{void heap\_insert(heap *h, void *item, int priority)}
-Appends the node to the heap, the newly inserted node is then compared to its parrents and sorted if needed.
+appends the node to the heap, the newly inserted node is then compared to its parrents and sorted if needed.
 
 \subsubsection{void *heap\_pop(heap *h)}
-returns the root node which is also the ndoe with the highest priority.
+returns the root node which is also the node with the highest priority.
 \\
 Before the node is returned the root of the heap is replaced with the tail of the heap and the heap is sorted in order to maintain the properties of the heap.
 \subsection{Unit testing}
@@ -129,24 +129,24 @@ The tests are initialized from main.c which calls:
     Tests the allocated size of root in the heap
   \item{unit\_test\_heap\_clear}
     \\
-    Tests the alloceted size of the root in the heap
+    Tests the allocated size of the root in the heap
   \item{unit\_test\_heap\_size}
     \\
-    Tests the size of the heap root - Actually inserted nodes
+    Tests the size of the heap root - actually inserted nodes
   \item{unit\_test\_heap\_top}
     \\
     Tests the priority of the heap roots top priority
   \item{unit\_test\_heap\_insert}
     \\
-    Tests if the heap root expands when the array is full by checking the allocated size of the heap root - It also tests the top priority of the heap root.
+    Tests if the heap root expands when the array is full by checking the allocated size of the heap root - it also tests the top priority of the heap root.
   \item{unit\_test\_heap\_pop}
     \\
     Tests the top priority of the returned node by the function.
 \end{itemize}
+\subsection{Makefile}
+The solution to Task 1 is found in /c-code - we have included a Makefile to run the program - the program initializes our main function that will then run our unit tests.
 \newpage
 \section{Task 2. Buenos system calls for basic I/O}
-\subsection{notes}
-
 \subsection{Implementation}
 \subsubsection{Which files did we modify/add?}
 \begin{itemize}
@@ -186,7 +186,7 @@ This function is explained in the next section.
         \\
         In our implementation we do only care for the console which in the function is defined as "FILEHANDLE\_STDIN", defined in proc/syscall.h\\
         Our implementation therefore distincts between 0 (FILEHANDLE\_STDIN) and everything else.\\
-        if the first argument is 0 the function will enter our implementation for reading from the console if it anything else than 0 our implementation will return -1 because we did not implement a solution for reading from files. -1 simply indicates an error to the function that called syscall\_read
+        If the first argument is 0 the function will enter our implementation for reading from the console if it is anything else than 0 our implementation will return -1 because we did not implement a solution for reading from files. -1 simply indicates an error to the function that called syscall\_read
     \item{uint32\_t buffer\_addr}
         \\
         buffer\_addr is the address to the buffer which will contain the read bytes from the console one the function has completed.
@@ -199,9 +199,9 @@ The caller function then has access to what was read from the console because it
 \\
 The actual length of read bytes is available to the caller function in a somewhat different manner.
 \\
-Once syscall\_read returns the length of bytes read it is returned to proc/syscall.c however this functions returns void which means that we cannot return the value to the actual caller function, instead we are setting the variable V0 to the returned value - V0 is then returned to the caller function.
+Once syscall\_read returns the length of bytes read it is returned to proc/syscall.c however this function returns void which means that we cannot return the value to the actual caller function, instead we are setting the variable V0 to the returned value - V0 is then returned to the caller function.
 \subsubsection{kernel/write.h}
-In this file we we implemented the function \textit{int syscall\_write(uint32\_t, uint32\_t, uint32\_t);}
+In this file we implemented the function \textit{int syscall\_write(uint32\_t, uint32\_t, uint32\_t);}
 This function is explained in the next section.
 \subsubsection{kernel/write.c}
 \textit{int syscall\_write(uint32\_t f\_handle, uint32\_t buffer\_addr, uint32\_t length)} is very similar to \textit{syscall\_read} in the sence that it takes the exact same arguments and they have the same meaning - The function is called in the same way and the return values are also the same.
@@ -211,7 +211,7 @@ The difference between the two functions is, that \textit{syscall\_write} writes
 \textit{syscall\_write} writes to the console one byte at a time untill it has written all the bytes provided by the buffer\_addr or untill the function has written the maximum allowed bytes set by the caller function.
 \\
 \\
-Once the functions stops writing to the console, the functions returns the length of actually written bytes.
+Once the function stops writing to the console, the function returns the length of actually written bytes.
 \\
 It does not store what it wrote to the console anywhere nor does it delete the buffer provided by the caller function.
 \subsubsection{proc/syscall.c}
@@ -237,4 +237,10 @@ The tests are initialized from main.c which calls:
     Reads from the console and writes what was read to the console.
     The unit test in this case checks that the read length is exactly the same as the length written to the console.
 \end{itemize}
+\subsection{Makefile}
+The solution to Task 2 can be found in /buenos and we have expanded the existing Makefile.
+\\
+To run our solution use "make readwrite" in the buenos directory.
+\\
+Make readwrite will build our solution and run fyams-sim once it has compiled the source code - once the program starts it will run our tests/readwrite.c which initializes our unit tests.
 \end{document}
