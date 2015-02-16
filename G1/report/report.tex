@@ -44,7 +44,7 @@ Hold 1} \\[2cm]
 
 \textsc{\LARGE Datalogisk Institut}\\[0.5cm]
 \textsc{\large Københavns Universitet}\\[1.5cm]
-\textsc{\large Lineær algebra for dataloger}\\
+\textsc{\large Operativsystemer og Multiprogrammering}\\
 \HRule \\[0.7cm]
 {\huge \bfseries G-Assignment 1}\\[0.4cm]
 \HRule \\[1.5cm]
@@ -126,22 +126,50 @@ The tests are initialized from main.c which calls:
 \begin{itemize}
   \item{unit\_test\_heap\_initialize}
     \\
-    Tests the allocated size of root in the heap
+    Tests the allocated size of root in the heap after initialization.
+    \\
+    We check the alloc\_size property of heap\_max, to make sure it's equal to INIT\_SIZE.
+    \\
+    This tests returns \textbf{passed}.
   \item{unit\_test\_heap\_clear}
     \\
-    Tests the allocated size of the root in the heap
+    Tests the allocated size of the root in the heap after it has been cleared.
+    \\
+    We check the alloc\_size property of heap\_max, to make sure it's equal to 0.
+    \\
+    This tests returns \textbf{passed}.
   \item{unit\_test\_heap\_size}
     \\
-    Tests the size of the heap root - actually inserted nodes
+    Tests the size of the heap root - actually inserted nodes.
+    \\
+    We check heap\_size() before initialization, and after 0, 1 and 2 elements has been inserted.
+    \\
+    Before initialization, heap\_size() should return -1. This test is \textbf{passed}.
+    \\
+    At 0, 1 and 2 elements inserted, heap\_size() should return the number of elements. All these tests are \textbf{passed}.
   \item{unit\_test\_heap\_top}
     \\
-    Tests the priority of the heap roots top priority
+    Tests the priority of the heap roots top priority.
+    \\
+    We check that heap\_top() correctly returns NULL nodes when the heap has not yet been initialized. We then initialie and insert nodes with a known priorities, and then return it to make sure the correct element is returned.
+    \\
+    Before initialization, heap\_top() should return NULL. This test is \textbf{passed}.
+    \\
+    We check different priorities. Where the inserted node is the highest priority, this test is \textbf{passed}. Where the inserted node is \textit{not} of highest priority, this test is \textbf{passed}.
   \item{unit\_test\_heap\_insert}
     \\
     Tests if the heap root expands when the array is full by checking the allocated size of the heap root - it also tests the top priority of the heap root.
+    \\
+    We insert 1024 elements into the heap, then check the alloc\_size, expecting it to be equal to INIT\_SIZE. This test is \textbf{passed}. We then insert a 1025th element, and check alloc\_size again, this time expecting it to be twice INIT\_SIZE. This test is \textbf{passed}.
+    \\
+    
   \item{unit\_test\_heap\_pop}
     \\
     Tests the top priority of the returned node by the function.
+    \\
+    We check that heap\_pop() correctly returns NULL before the heap is initialized. After initialization, heap\_pop() should always return the highest priority node, and remove it from the heap.
+    \\
+    Before initialization, heap\_pop() should return NULL. This test is \textbf{passed}. We then test by inserting a number of elements, with different priorities, in a non-sorted order. We then proceed to perform heap\_pop() multiple times, always expecting the highest remaining value to be popped. This test is \textbf{passed}.
 \end{itemize}
 \subsection{Makefile}
 The solution to Task 1 is found in /c-code - we have included a Makefile to run the program - the program initializes our main function that will then run our unit tests.
@@ -228,14 +256,25 @@ The tests are initialized from main.c which calls:
 \begin{itemize}
   \item{unit\_test\_read}
     \\
-    Tests that the read bytes are within the range of the limited length provided in the function call
+    Tests that the read bytes are within the range of the limited length provided in the function call.
+    \\
+    We check that the length returned by syscall\_read() is between 1 and 64.
+    \\
+    This test is \textbf{passed}.
   \item{unit\_test\_write}
     \\
-    Tests that the written bytes are exactly the length provided in the function call
+    Tests that the written bytes are exactly the length provided in the function call.
+    \\
+    We check that the length returned by syscall\_write() is equal to the number of characters in the string.
+    \\
+    This test is \textbf{passed}.
   \item{unit\_test\_read\_write}
     \\
     Reads from the console and writes what was read to the console.
-    The unit test in this case checks that the read length is exactly the same as the length written to the console.
+    \\
+    We check that the read length returned by syscall\_read() is exactly the same as the length written to the console.
+    \\
+    This test is \textbf{passed}.
 \end{itemize}
 \subsection{Makefile}
 The solution to Task 2 can be found in /buenos and we have expanded the existing Makefile.
