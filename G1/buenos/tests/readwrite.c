@@ -8,6 +8,9 @@ int main()
     syscall_read(FILEHANDLE_STDIN, c, len);
     syscall_write(FILEHANDLE_STDOUT, c, len);
 
+    int length = 64;
+    syscall_write(FILEHANDLE_STDOUT, ">>>hej med dig<<<\0lol", length);
+
     syscall_halt();
 
     return 0;

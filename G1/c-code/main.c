@@ -83,6 +83,7 @@ void unit_test_heap_insert()
 {
     printf("\nInitilizing unit_test_heap_insert\n");
     heap heap_max;
+    node *nodex;
     heap_initialize(&heap_max);
 
     //Testing that the array is in fact dynamic - Inserting has already been tested with `unit_test_heap_top`
@@ -91,6 +92,9 @@ void unit_test_heap_insert()
     {
         heap_insert(&heap_max, NULL, i);
     }
+    nodex = heap_top(&heap_max);
+    printf("Expected priority: %d, actual priority: %d - %s\n", 1023, nodex->priority, 1023 == nodex->priority ? "Passed" : "Failed");
+
     size_t size = heap_max.alloc_size;
     printf("Expected alloc_size: %d, alloc_size size: %zd - %s\n", INIT_SIZE, size, size == INIT_SIZE ? "Passed" : "Failed");
 
@@ -108,6 +112,9 @@ void unit_test_heap_insert()
     heap_insert(&heap_max, NULL, 1024);
     size = heap_max.alloc_size;
     printf("Expected alloc_size: %d, alloc_size size: %zd - %s\n", INIT_SIZE * 4, size, size == INIT_SIZE * 4 ? "Passed" : "Failed");
+
+    nodex = heap_top(&heap_max);
+    printf("Expected priority: %d, actual priority: %d - %s\n", 1024, nodex->priority, 1024 == nodex->priority ? "Passed" : "Failed");
 }
 
 void unit_test_heap_pop()
