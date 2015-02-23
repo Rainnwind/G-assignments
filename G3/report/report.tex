@@ -1,0 +1,63 @@
+\documentclass[a4paper,12pt,danish]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[danish]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{makeidx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+\usepackage{pbox}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{multicol}
+\pagestyle{fancy}
+%Setting link borders to none
+\hypersetup{pdfborder = {0 0 0}}
+
+\fancyhead[C]{}
+\fancyhead[L]{}
+\fancyhead[R]{\footnotesize{
+Rane Eriksen \textsc{BVL193}\\
+Christian Nielsen \textsc{BNF287}\\
+Sebastian O. Jensen \textsc{GJX653}}}
+
+\begin{document}
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.4mm}}
+\center
+\small{ \emph{Forfattere:}\\
+13.07-89 Rane Eriksen \textsc{BVL193}
+\\
+05.01-90 Christian Nielsen \textsc{BNF287}
+\\
+14.06-79 Sebastian O. Jensen \textsc{GJX653}
+\\
+Hold 1} \\[2cm]
+
+\textsc{\LARGE Datalogisk Institut}\\[0.5cm]
+\textsc{\large Københavns Universitet}\\[1.5cm]
+\textsc{\large Operativsystemer og Multiprogrammering}\\
+\HRule \\[0.7cm]
+{\huge \bfseries G-Assignment 3}\\[0.4cm]
+\HRule \\[1.5cm]
+\textsc{\Large \textsc{\today}}\\[0.5cm]
+
+\includegraphics[scale=0.5]{ku_logo.png}\\[1cm]
+
+\end{titlepage}
+\tableofcontents
+\newpage
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thempfootnote}{\arabic{mpfootnote}}
+\renewcommand\thesubsection{}
+\newcommand{\minus}[1]{{#1}^{-}}
+
+\end{document}
