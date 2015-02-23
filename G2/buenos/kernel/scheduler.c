@@ -72,10 +72,10 @@ void scheduler_init(void) {
 }
 
 /**
- * Adds given thread to scheduler's ready to run list. Doesn't do 
+ * Adds given thread to scheduler's ready to run list. Doesn't do
  * any synchronization, it is assumed that spinlock to the thread table
  * is held and interrups are disabled when calling this function.
- * 
+ *
  * @param t thread to add to ready list
  *
  */
@@ -145,13 +145,13 @@ static TID_t scheduler_remove_first_ready(void)
  *
  * @param t Thread to add. The thread must not already be on the ready
  * list or running.
- * 
+ *
  */
 
 void scheduler_add_ready(TID_t t)
 {
     interrupt_status_t intr_status;
-    
+
     intr_status = _interrupt_disable();
 
     spinlock_acquire(&thread_table_slock);
@@ -211,8 +211,9 @@ void scheduler_schedule(void)
     spinlock_release(&thread_table_slock);
 
     scheduler_current_thread[this_cpu] = t;
+    kprintf("<><><><><><><><><>thread active: %d<><><><><><><><><><><><><>\n", t);
 
     /* Schedule timer interrupt to occur after thread timeslice is spent */
-    timer_set_ticks(_get_rand(CONFIG_SCHEDULER_TIMESLICE) + 
+    timer_set_ticks(_get_rand(CONFIG_SCHEDULER_TIMESLICE) +
                     CONFIG_SCHEDULER_TIMESLICE / 2);
 }

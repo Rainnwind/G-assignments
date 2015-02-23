@@ -298,6 +298,9 @@ void process_kill_children(process_id_t process_id) {
     int count = 0;
     for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
         if (process_table[process_id].children[i] == CHILD) {
+            //Romving child from current process
+            process_remove_child(process_id, i);
+
             process_table[i].state = PROCESS_FREE;
             process_table[i].parent_id = -1;
 
@@ -305,8 +308,9 @@ void process_kill_children(process_id_t process_id) {
             spinlock_acquire(&thread_table_slock);
 
             kprintf("thread to kill: %d, process name: %s\n", process_table[i].thread_id, process_table[i].executable);
-
-            thread_table[process_table[i].thread_id].context->pc = (uint32_t)process_finish;
+//    vm_destroy_pagetable(thread_table[process_table[i].thread_id].pagetable);
+    thread_table[process_table[i].thread_id].pagetable = NULL;
+            thread_table[process_table[i].thread_id].context->pc = (uint32_t)thread_finish;
 
             spinlock_release(&thread_table_slock);
 
@@ -354,6 +358,7 @@ void process_finish(int retval) {
 int process_join(process_id_t pid) {
     interrupt_status_t intr_status;
     int retval;
+    //Checking that the process_id is within range
     if (pid < 0 || pid >= PROCESS_MAX_PROCESSES) {
         return -1;
     }
@@ -369,6 +374,7 @@ int process_join(process_id_t pid) {
         thread_switch();
         spinlock_acquire(&process_table_slock);
     }
+
     //The processes waiting for has finished
     retval = process_table[pid].retval;
     process_table[pid].state = PROCESS_FREE;
