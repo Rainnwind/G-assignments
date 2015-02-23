@@ -86,7 +86,7 @@ The last state is PROCESS\_ZOMBIE which is set when a process terminates, this i
 \\
 lastly we implemented a varible to hold the thread\_id belonging to the process.
 \\
-The reason for this variable is be able to terminate the thread of a process if its parent die - We do not want to have any running threads in the background because of an eternal loop.
+The reason for this variable is to be able to terminate the thread of a process if its parent die - We do not want to have any running threads in the background because of an eternal loop.
 \\
 \\
 The essential part of our data structure can be seen below and can also be found in proc/process.h
@@ -110,7 +110,7 @@ typedef struct {
 \end{verbatim}
 \subsection{System calls}
 \subsubsection{SYSCALL\_EXEC}
-To execute another program a program must call SYSCALL\_EXEC with a string as argument, the argument is a string that describes the disk it resides on and the name on the disk an example is "[disk]initprog".
+To execute another program a program must call SYSCALL\_EXEC with a string as argument, the argument is a string that describes the disk the program resides on and the name on the disk an example is "[disk]initprog".
 \\
 The system call returns the process\_id of the newly created process created by process\_spawn which is called by SYSCALL\_EXEC.
 \\
@@ -203,13 +203,21 @@ We have implemented:
   When process\_finish signals the cpu that a process is about to terminate, this process is reactivated, but only if it's the process associated with pid. Once reactivated the loop runs again and if the state is PROCESS\_ZOMBIE it leaves the loop and the the process state is set to PROCESS\_FREE, the lock is released and the return value is return to the process that was waiting.
 \end{itemize}
 \section{Tests}
-The test can be run with the command make processTest which execute the test program procTest
-procTest first start a child procces of program test1 which we can call child1. child1 then start
-a child process of program test2. Test2 will therefore be grandchild of procTest.
-After procTest have startet child1, syscall_join on child1 is called and procTest therfore waits until
-child1 has terminatet before continiuing its execution and start a new process of test1 which we
-call child2. we also join on child2 before we call sysscall_halt.
-
+The test can be run with the command make processTest which executes the test program "procTest".
+\\
+\\
+"procTest" starts by initializing a child process "test1" which we call child1.
+\\
+child1 then initializes a child process "test2" which makes "test2" a grandchild to procTest.
+\\
+once "procTest" has started "child1" syscall\_join on "child1" is called and "procTest" will wait for
+ "child1" to terminate before it contiues its own execution which will start a new process of "test1" which we
+call "child2".
+\\
+we also join on "child2" before we call sysscall\_halt.
+\\
+\\
+Our tests are doing as expected, we did not however test the problem in the next section, we merely discovered it.
 \section{Worth mentioning}
 While our process\_join, process\_finish and process\_spawn works as intended we have discovered an error when shutting down our children while they are in the process of being initialized, although this error only occurs when a program runs, spawns a new program and immediately shuts down.
 \\
