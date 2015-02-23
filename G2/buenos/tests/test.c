@@ -39,9 +39,11 @@
 int main(void)
 {
     syscall_exec("[disk]test2");
+    puts("I'm test1 counting to 500000");
     int count = 500000;
      while (count > 0) {
         count--;
      }
+     puts("test2 done counting to 500000/n");
     return 0;
 }

@@ -356,7 +356,7 @@ int process_join(process_id_t pid) {
     interrupt_status_t intr_status;
     int retval;
     //Checking that the process_id is within range
-    if (pid < 0 || pid >= PROCESS_MAX_PROCESSES || process_table[pid] == PROCESS_FREE) {
+    if (pid < 0 || pid >= PROCESS_MAX_PROCESSES || process_table[pid].state == PROCESS_FREE) {
         return -1;
     }
 

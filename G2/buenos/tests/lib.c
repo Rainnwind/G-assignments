@@ -183,3 +183,11 @@ int syscall_delete(const char *filename)
 {
     return (int)_syscall(SYSCALL_DELETE, (uint32_t)filename, 0, 0);
 }
+
+
+// easier print methode
+
+//void print(char* string){
+  //      syscall_write(1, string, sizeof(string));
+   // }
+
