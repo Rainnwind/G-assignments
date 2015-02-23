@@ -37,9 +37,11 @@
 #ifndef BUENOS_PROC_PROCESS
 #define BUENOS_PROC_PROCESS
 
+#include "lib/types.h"
+
 typedef int process_id_t;
 
-void process_start(const char *executable);
+void process_start(uint32_t process_id);
 
 #define USERLAND_STACK_TOP 0x7fffeffc
 
@@ -48,19 +50,40 @@ void process_start(const char *executable);
 
 #define PROCESS_MAX_PROCESSES 32
 
+#define EXECUTABLE_LENGTH 64
+
+#define CHILD 1
+
+typedef enum {
+    PROCESS_FREE,
+    PROCESS_RUNNING,
+    PROCESS_SLEEPING,
+    PROCESS_ZOMBIE
+} process_state_t;
+
+
 typedef struct {
-    char *name;
-    int state;
-    int counter; //Might not be needed
-    int priority; //Might not be needed
+    char executable[EXECUTABLE_LENGTH];
+    process_state_t state;
+    process_id_t parent_id;
+    int children[PROCESS_MAX_PROCESSES];
+    int child_count;
+    int retval;
+    int thread_id;
 } process_control_block_t;
 
 /* Initialize the process table.  This must be called during kernel startup
    before any other process-related calls. */
 void process_init();
 
+void process_add_child(process_id_t parent_id, process_id_t child_id);
+
+void process_remove_child(process_id_t parent_id, process_id_t child_id);
+
 /* Run process in a new thread.  Returns the PID of the new process. */
 process_id_t process_spawn(const char *executable);
+
+void process_kill_children(process_id_t process_id);
 
 /* Stop the process and the thread it runs in.  Sets the return value as
    well. */

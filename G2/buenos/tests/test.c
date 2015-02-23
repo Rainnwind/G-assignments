@@ -38,8 +38,6 @@
 
 int main(void)
 {
-    syscall_join(syscall_exec("[disk]test"));
-    syscall_halt();
-
+    syscall_exec("[disk]test2");
     return 0;
 }

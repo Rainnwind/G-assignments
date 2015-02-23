@@ -38,8 +38,8 @@
 
 int main(void)
 {
-    syscall_join(syscall_exec("[disk]test"));
-    syscall_halt();
+    while(1) {
 
+    }
     return 0;
 }

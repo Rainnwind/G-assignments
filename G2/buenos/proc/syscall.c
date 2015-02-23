@@ -41,6 +41,7 @@
 #include "kernel/assert.h"
 #include "drivers/device.h"
 #include "drivers/gcd.h"
+#include "proc/process.h"
 
 #define V0 user_context->cpu_regs[MIPS_REGISTER_V0]
 #define A0 user_context->cpu_regs[MIPS_REGISTER_A0]
@@ -100,7 +101,16 @@ void syscall_handle(context_t *user_context)
         user_context->cpu_regs[MIPS_REGISTER_V0] =
             syscall_read(A1, (char*) A2, A3);
         break;
-    default: 
+    case SYSCALL_EXEC:
+        V0 = process_spawn((char *)A1);
+        break;
+    case SYSCALL_EXIT:
+        process_finish(A1);
+        break;
+    case SYSCALL_JOIN:
+        V0 = process_join(A1);
+        break;
+    default:
         KERNEL_PANIC("Unhandled system call\n");
     }
 

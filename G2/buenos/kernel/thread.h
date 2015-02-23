@@ -74,10 +74,10 @@ typedef struct {
        if process table is implemented. */
     process_id_t process_id;
     /* pointer to the next thread in list (<0 = end of list) */
-    TID_t next; 
+    TID_t next;
 
     /* pad to 64 bytes */
-    uint32_t dummy_alignment_fill[9]; 
+    uint32_t dummy_alignment_fill[9];
 } thread_table_t;
 
 /* function prototypes */

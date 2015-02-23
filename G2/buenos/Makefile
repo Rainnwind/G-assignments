@@ -143,13 +143,15 @@ real-clean: clean
 
 # Make commands for G2
 prog = halt
+prog2 = test
+prog3 = test2
 cleardisk = if [ -f fyams.harddisk ] ; \
 	then \
 		rm fyams.harddisk; \
 	fi;
 maketests = make -C tests/
 createdisk = util/tfstool create fyams.harddisk 2048 disk
-writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog)
+writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) && util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)
 rundisk = fyams-sim buenos initprog=[disk]$(prog)
 halt: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
