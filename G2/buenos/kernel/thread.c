@@ -303,7 +303,6 @@ void thread_goto_userland(context_t *usercontext)
  */
 void thread_finish(void)
 {
-    kprintf("Killed a thread\n");
     TID_t my_tid;
 
     my_tid = thread_get_current_thread();

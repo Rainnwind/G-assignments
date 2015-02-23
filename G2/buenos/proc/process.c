@@ -307,8 +307,6 @@ void process_kill_children(process_id_t process_id) {
 
             spinlock_acquire(&thread_table_slock);
 
-
-//            kprintf("thread to kill: %d, process name: %s, thread_state: %d, process_state: %d, sleeps_on: %d\n", process_table[i].thread_id, process_table[i].executable, thread_table[process_table[i].thread_id].state, process_table[i].state, thread_table[process_table[i].thread_id].sleeps_on);
             thread_table[process_table[i].thread_id].context->pc = (uint32_t)process_finish;
 
             spinlock_release(&thread_table_slock);
