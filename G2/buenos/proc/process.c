@@ -301,20 +301,18 @@ void process_kill_children(process_id_t process_id) {
             process_table[i].state = PROCESS_FREE;
             process_table[i].parent_id = -1;
 
+
+            spinlock_acquire(&thread_table_slock);
+
+            kprintf("thread to kill: %d, process name: %s\n", process_table[i].thread_id, process_table[i].executable);
+
+            thread_table[process_table[i].thread_id].context->pc = (uint32_t)process_finish;
+
+            spinlock_release(&thread_table_slock);
+
             if (process_table[i].child_count > 0) {
                 process_kill_children(i);
             }
-            spinlock_acquire(&thread_table_slock);
-            thread_table[process_table[i].thread_id].context->pc = (uint32_t)process_finish;
-            spinlock_release(&thread_table_slock);
-
-            kprintf("I want to kill you, but I can't :'(\n");
-
-/*            if (thread_table[process_table[i].thread_id].pagetable != NULL) {
-                vm_destroy_pagetable(thread_table[process_table[i].thread_id].pagetable);
-                thread_table[process_table[i].thread_id].pagetable = NULL;
-            }
-*/
 
             process_table[process_id].child_count--;
             count++;
@@ -332,9 +330,6 @@ void process_finish(int retval) {
     thread_table_t *my_entry;
     my_entry = thread_get_current_thread_entry();
 
-    kprintf("process_id exiting: %d\n", my_entry->process_id);
-    kprintf("process name: %s\n", process_table[my_entry->process_id].executable);
-
     intr_status = _interrupt_disable();
     spinlock_acquire(&process_table_slock);
     if (process_table[my_entry->process_id].child_count > 0) {
@@ -342,7 +337,6 @@ void process_finish(int retval) {
     }
 
     if (my_entry->process_id >= 0) {
-        kprintf("parent_id to zombie: %d\n", process_table[my_entry->process_id].parent_id);
         process_table[my_entry->process_id].state = PROCESS_ZOMBIE;
         process_table[my_entry->process_id].retval = retval;
     }
@@ -363,6 +357,7 @@ int process_join(process_id_t pid) {
     if (pid < 0 || pid >= PROCESS_MAX_PROCESSES) {
         return -1;
     }
+
 
     //Sleeping untill the process waiting for has finished
     intr_status = _interrupt_disable();
