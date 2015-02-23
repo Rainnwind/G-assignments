@@ -38,13 +38,13 @@
 
 int main(void)
 {
-char string[] = "test2 counting to 50000\n";
+    char string[] = "test2 counting to 50000\n";
     printit(string, sizeof(string));
     int count = 50000;
      while (count > 0) {
         count--;
      }
-char string2[] = "test2 done\n";
+    char string2[] = "test2 done\n";
     printit(string2, sizeof(string2));
     return 0;
 }

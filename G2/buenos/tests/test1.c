@@ -44,6 +44,7 @@ int main(void)
     int count = 500000;
      while (count > 0) {
         count--;
+        //Do nothing
      }
     char string2[] = "test1 I'm done\n";
     printit(string2, sizeof(string2));
