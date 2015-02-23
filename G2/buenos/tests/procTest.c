@@ -9,7 +9,7 @@ int main(void)
     //print("234567890");
     child1 = syscall_exec("[disk]test1");
     //print("starting process test2");
-    child2 = syscall_exec("[disk]test2");
+    child2 = syscall_exec("[disk]test1");
     //print("joining test1 as child1");
     syscall_join(child1);
     //print("joining test2 as child2");
