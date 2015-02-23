@@ -1,12 +1,18 @@
 #include "tests/lib.h"
 
-void print(char* string);
+void printit(char *string, int l) {
+    int i = 0;
+    while (i < l) {
+        syscall_write(1, &string[i], 1);
+        i++;
+    }
+}
 int main(void)
 {
 
     int child1;
     int child2;
-    print("234567890");
+    printit("234567890", 9);
     child1 = syscall_exec("[disk]test1");
     //print("starting process test2");
     child2 = syscall_exec("[disk]test1");
@@ -21,10 +27,4 @@ int main(void)
 
 }
 
-void print(char* string){
-    unsigned int i;
-    for(i = 0; i < sizeof(string); i++) {
-        syscall_write(1, string[i], 1);
-    }
-}
 
