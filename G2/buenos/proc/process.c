@@ -295,7 +295,6 @@ process_id_t process_spawn(const char *executable) {
 }
 
 void process_kill_children(process_id_t process_id) {
-    int count = 0;
     for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
         if (process_table[process_id].children[i] == CHILD) {
             //Romving child from current process
@@ -316,8 +315,7 @@ void process_kill_children(process_id_t process_id) {
             }
 
             process_table[process_id].child_count--;
-            count++;
-            if (count == process_table[process_id].child_count - 1) {
+            if (process_table[process_id].child_count < 0) {
                 break;
             }
         }

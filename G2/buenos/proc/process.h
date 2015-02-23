@@ -57,7 +57,6 @@ void process_start(uint32_t process_id);
 typedef enum {
     PROCESS_FREE,
     PROCESS_RUNNING,
-    PROCESS_SLEEPING,
     PROCESS_ZOMBIE
 } process_state_t;
 
