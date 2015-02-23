@@ -59,227 +59,123 @@ Hold 1} \\[2cm]
 \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
 \renewcommand\thesubsection{}
 \newcommand{\minus}[1]{{#1}^{-}}
-\section{Task 1. A priority queue}
-\subsection{notes}
-The heap data structure is a tree structure that is only concerned about the highest or lowest value which is always stored in the first entry of the tree.
+\section{Task 1. Types and functions for userland processes in Buenos}
+\subsection{Defining the data structure}
+In our data structure of our processes we wanted to make sure that the parent process could administer all of its children in case of early termination.
+\\
+We therefor implemented an array with the same size as the maximum process to ensure that any process had capacity for all possible processes.
+\\
+We also implemented a count which counts how many the current parent has - This is only to shorten the algorithm when terminating the processes of a parent.
 \\
 \\
-Inserting a node is done by appending the node to the tail of the array which symbolizes the heap.
-\\
-The newly inserted node is then compared with its parrent node - If the heap is a max heap the priority of the parrent node must be lower than the priority of the newly inserted node - which it is in our case - if it is higher, the two nodes swap places in the array, this process is done until the newly inserted node has reached the root of the tree or if the newly inserted node is lower or equal to its parrent.
+We initially wanted to create a linked list that could increase in size as needed, but kmalloc is only available while the kernel is initializing, hence the static size of our array.
 \\
 \\
-The runtime is $\Theta(log\ n)$ since the newly inserted node must only compare itself with a parrent "height of the tree"\ times.
+The name of the executable file also has limitations due to kmalloc not being available and therefor we set the maximum size of the executable file name to be 64 characters.
 \\
 \\
-Removing the root node is very similar to inserting a node since removing the node is done by storing the root node in a temporary variable and moving the tail node to the root node.
-\\
-The root node is then compared to its children and swapped with one of the children if either the priority of the left child node is bigger than the  priority of the root node or the priority of the right child node is bigger than the priority of the root node.
-\\
-This process is also repeated untill neither of the children has a node with a priority that is higher than their parrent.
-\\
-Once this process is completed the the temporary variable is returned by the function.
-\\
-The runtime of removing a node is also $\Theta(log\ n)$
+It is also essential to a process to hold the return given by the process. This is used in two places, when exiting a and when a process is waiting for another process.
 \\
 \\
-This makes it a good structure for a priority queue, and can be used to improve the current priority queue with a running time of $\Theta(n^2)$
-\subsection{Implementation}
-\subsubsection{void heap\_initialize(heap *h)}
-initializes a new heap by allocating size for the root of the array and sets the size of the heap to zero which is used to indicate how many entries the root contains.
-
-\subsubsection{void heap\_clear(heap *h)}
-frees the allocated memory used by the heap and sets the "initialized" variable in the heap to zero. This is used to determine if a heap is correctly initialized in every other function other than insert.
-
-\subsubsection{size\_t heap\_size(heap *h)}
-returns the size of the heap which is the count of inserted nodes in the root.
-
-\subsubsection{void *heap\_top(heap *h)}
-returns the root node of the heap which is also the node with the highest priority.
-
-\subsubsection{void heap\_insert(heap *h, void *item, int priority)}
-appends the node to the heap, the newly inserted node is then compared to its parrents and sorted if needed.
-
-\subsubsection{void *heap\_pop(heap *h)}
-returns the root node which is also the node with the highest priority.
-\\
-Before the node is returned the root of the heap is replaced with the tail of the heap and the heap is sorted in order to maintain the properties of the heap.
-\subsection{Unit testing}
-In our unit tests we are testing every function seperately.
-\\
-Every test performed is done by expecting a value of comparing the expected value with the actual value.
-\\
-The actual value is retrieved in two ways.
-\\
-If the function returns anything else than void, then that's the value we are comparing with.
-\\
-If the function returns void we are simply extracting the value from the heap since we have direct access to the heap.
+A process state is also important when a process needs to wait for another process, we therefor implemented three different states: PROCESS\_FREE which states that the process is available to use, PROCESS\_RUNNING which states that the process is busy, however it does not state if it is the actual processes running, one will have to look at the state of a thread to determine this. The last state is PROCESS\_ZOMBIE which is set when a process terminates, this is used for processes waiting for another process to terminate.
 \\
 \\
-The heap root has an object "void *thing"\ which can be anything and is a pointer to some object.
+lastly we implemented a container for the thread\_id belonging to the process.
 \\
-We chose, because of this fact, to only test against the expected priority instead of testing for an expected "thing".
+The reason for this container is to actually terminate the thread of a process if its parent die - We do not want to have any running threads in the background because of an eternal loop.
+\subsection{System calls}
+\subsubsection{SYSCALL\_EXEC}
+To execute another program a program must call SYSCALL\_EXEC with a string as argument, the argument is a string that describes the disk it resides on and the name on the disk an example is "[disk]initprog".
 \\
-\subsubsection{What do we test and where?}
-The tests are initialized from main.c which calls:
+The call to the system call returns the process\_id of the newly created process created by process\_spawn which is called by SYSCALL\_EXEC.
 \\
-\begin{itemize}
-  \item{unit\_test\_heap\_initialize}
-    \\
-    Tests the allocated size of root in the heap after initialization.
-    \\
-    We check the alloc\_size property of heap\_max, to make sure it's equal to INIT\_SIZE.
-    \\
-    This tests returns \textbf{passed}.
-  \item{unit\_test\_heap\_clear}
-    \\
-    Tests the allocated size of the root in the heap after it has been cleared.
-    \\
-    We check the alloc\_size property of heap\_max, to make sure it's equal to 0.
-    \\
-    This tests returns \textbf{passed}.
-  \item{unit\_test\_heap\_size}
-    \\
-    Tests the size of the heap root - actually inserted nodes.
-    \\
-    We check heap\_size() before initialization, and after 0, 1 and 2 elements has been inserted.
-    \\
-    Before initialization, heap\_size() should return -1. This test is \textbf{passed}.
-    \\
-    At 0, 1 and 2 elements inserted, heap\_size() should return the number of elements. All these tests are \textbf{passed}.
-  \item{unit\_test\_heap\_top}
-    \\
-    Tests the priority of the heap roots top priority.
-    \\
-    We check that heap\_top() correctly returns NULL nodes when the heap has not yet been initialized. We then initialie and insert nodes with a known priorities, and then return it to make sure the correct element is returned.
-    \\
-    Before initialization, heap\_top() should return NULL. This test is \textbf{passed}.
-    \\
-    We check different priorities. Where the inserted node is the highest priority, this test is \textbf{passed}. Where the inserted node is \textit{not} of highest priority, this test is \textbf{passed}.
-  \item{unit\_test\_heap\_insert}
-    \\
-    Tests if the heap root expands when the array is full by checking the allocated size of the heap root - it also tests the top priority of the heap root.
-    \\
-    We insert 1024 elements into the heap, then check the alloc\_size, expecting it to be equal to INIT\_SIZE. This test is \textbf{passed}. We then insert a 1025th element, and check alloc\_size again, this time expecting it to be twice INIT\_SIZE. This test is \textbf{passed}.
-    \\
-    
-  \item{unit\_test\_heap\_pop}
-    \\
-    Tests the top priority of the returned node by the function.
-    \\
-    We check that heap\_pop() correctly returns NULL before the heap is initialized. After initialization, heap\_pop() should always return the highest priority node, and remove it from the heap.
-    \\
-    Before initialization, heap\_pop() should return NULL. This test is \textbf{passed}. We then test by inserting a number of elements, with different priorities, in a non-sorted order. We then proceed to perform heap\_pop() multiple times, always expecting the highest remaining value to be popped. This test is \textbf{passed}.
-\end{itemize}
-\subsection{Makefile}
-The solution to Task 1 is found in /c-code - we have included a Makefile to run the program - the program initializes our main function that will then run our unit tests.
+The process id can be used to ask the program to wait until the newly executed program has terminated.
+\subsubsection{SYSCALL\_EXIT}
+There are two ways a program can exit itself, one way is by returning an integer and the other way is to call SYSCALL\_EXIT with an integer.
+\\
+return actually calls SYSCALL\_EXIT so these are the same.
+\\
+SYSCALL\_EXIT never returns a value and it calls process\_finish which is explained in detail later.
+\subsubsection{SYSCALL\_JOIN}
+To have a program wait for another program, the program must call SYSCALL\_JOIN, the program calling this system call will wait untill the system call returns with a reponse, there is no telling of how long this system call will take to return a value and have the program continue its execution.
+\\
+SYSCALL\_JOIN takes one argument which is the process id of the process it wants to wait for, this id is granted when using SYSCALL\_EXEC.
+\\
+SYSCALL\_JOIN calls process\_join which is explained in detail later. 
 \newpage
-\section{Task 2. Buenos system calls for basic I/O}
-\subsection{Implementation}
-\subsubsection{Which files did we modify/add?}
+\section{Task 2. System calls for user-process control in Buenos}
+\subsection{System calls}
+We have implemented:
 \begin{itemize}
-    \item{We modified: kernel/module.mk}
-        \\
-        In this file, we have added read.c and write.c to FILES in order to have our implementation compiled along
-        with the rest of buenos kernel.
-    \item{We added: kernel/read.h}
-        \\
-        Contains the header file for the solution to syscall\_read
-    \item{We added: kernel/read.c}
-        \\
-        Contains the actual code for the solution to syscall\_read
-    \item{We added: kernel/write.h}
-        \\
-        Contains the header file for the solution to syscall\_write
-    \item{We added: kernel/write.c}
-        \\
-        Contains the actual code for the solution to syscall\_write
-    \item{we modified: proc/syscall.c}
-        \\
-        We expanded the switch to also handle syscall\_read and syscall\_write and we defined the 
-        variables A0, A1, A2, A3 and V0
+  \item{process\_init}
+    \\
+    Initializes the process\_table.
+    \\
+    When initializing the process\_table we want to make sure that every process is available this is why we set the process state of every process to STATE\_FREE which indicates that the process is not in use by any thread.
+    We also want to initialize the retval to 0 and set the parent\_id to -1.
+    \\
+    We set the parent\_id to -1 to indicate that the process has no parent since a process\_id must be at least 0.\\
+    Lastly we set the child\_count to zero and every entry in our children array to 0.
+  \item{process\_add\_child and process\_remove\_child}
+  We have implemented these two functions to keep track of a parents child processes.
+  \\
+  The two functions assumes that a lock is already acquired.
+  \\
+  The child array works in way that makes insertion and deletion run in $\Theta(1)$ because the index is actually the id of the process and the value of the entry is either true or false.
+  \\
+  It is worth mentioning that when a process terminates it will run through every entry of its child array, looking for an entry with the value 1, the index is then used to terminate the child, and the index is also used to terminate every child of the child, the runtime of terminating a process can therefor be expensive which is why we implemented a count for the children array to keep track of how many children a process actually has.
+  This is a substitute to a dynamic linked list.
+  \item{process\_spawn}
+  \\
+  This function is not a replacement of the process\_init, but an initializer to our processes that we want to create.
+  \\
+  When process\_spawn is called it will look for a process with the state PROCESS\_FREE, if it fails to find a process with this state, the function will return -1 otherwise it will return the id of the newly created process.
+  \\
+  Once a process has been found and the state of it is PROCESS\_FREE we initialize the process in the same way that we initialize every entry of the process\_table in process\_init but we set the state to PROCESS\_RUNNING instead of PROCESS\_FREE to state that the process is not available.
+  \\
+  \\
+  We use two kinds of locks in this function, the first lock is acquired in the beginning of the function which holds a lock for the process\_table that we wish to access and manipulate, we release this lock when the function has started the new process, before the function ends we wish to store the thread\_id of the newly created thread which holds the newly created process.
+  \\
+  We do this by acquiring the lock for threads which, we want to store thread thread\_id because we want to be able to terminate the child threads and their process when a parent terminates.
+  \\
+  We will explain this in the next.
+  \item{process\_finish and process\_kill\_children}
+  When a process finishes we wish to keep the return value in the process in case of another process waiting for the current to terminate. We do this by storing the return value in the process.
+  \\
+  The return value is given by the syscall\_exit(some integer) or by the program return an integer as its last program command.
+  \\
+  Because we are storing the value in the process we also set the state of the process as PROCESS\_ZOMBIE. This is done for two reasons, the first reason is that we know that the function is not running anymore, but is not completely finished and therefor it should not be marked as PROCESS\_FREE, we use PROCESS\_ZOMBIE to indicate that the process is in a state where some other process needs to evaluate the return value of this process, we explain this in the next section.
+  \\
+  Once the the return value has been set, we signal any process waiting for this process to terminate that it has by using sleepq\_wake with the address of the process which is about to terminate.
+  \\
+  \\
+  Before finishing the thread completely we also want to terminate any child that the current process possess, we do so by calling the recursive function process\_kill\_children with the id of the currently running process.
+  \\
+  \\
+  what process\_kill\_children does is, that it runs through every entry of the children array belonging to the process associated with the process\_id given as parameter when the function is called.
+  \\
+  Every index in the children array is the actual process\_id of of a process and the value of every entry in the children array is either 1 or 0.
+  \\
+  When the value of the entry is 1 then this index is a child and this child must be terminated, not only the process but the thread that holds the process too.
+  \\
+  We do this by modifying the program counter of the thread to point to process\_finish, because of this we also remove the index in the children array since we do not want this process to enter an eternal loop.
+  \\
+  \\
+  Once the thread we want to terminate gets CPU time it will terminate itself thus making it available in the thread\_table again.
+  \\
+  \\
+  As mentioned, this function is called recursively and every entry in a child array that has a value of 1 will call the function untill every child has been set to self terminate.
+  \item{process\_join}
+  This function has only one job to do, it is designed to make a process wait for another process.
+  \\
+  The function starts by checking that the pid(process\_id) of the process that the currently running process wants to wait for is in within the range of valid process id's, it also checks that the process associated with the pid does not have the state PROCESS\_FREE.
+  If either the pid is not within range or the state of the process is PROCESS\_FREE process\_join returns -1, we do this to make sure, that the currently running process do not risk waiting forever, because the process associated with the pid is either not running or simply does not exist.
+  \\
+  \\
+  If it is the case that the pid is valid the function acquires a lock for the process\_table, it then enters a while loop which terminates when the process associated with the pid changes its state to PROCESS\_ZOMBIE, however the lock is released inside the loop and the thread is switched - This ensures that the the process waiting for another process is not obtaining the CPU time, before releasing the lock, the address of the process associated with the pid is given to the function sleepq\_add which sets the sleeps\_on in the thread to the address of the process associated with the pid.
+  \\
+  When process\_finish signals the cpu that a process is about to terminate, this process is reactivated, but only if it's the process associated with pid. Once reactivated the loop runs again and if the state is PROCESS\_ZOMBIE it leaves the loop and the the process state is set to PROCESS\_FREE, the lock is released and the return value is return to the process that was waiting.
 \end{itemize}
-\subsubsection{kernel/module.mk}
-As stated before, we only added read.c and write.c to this file in order to have our solution compiled with the buenos kernel in order to use the solution.
-
-\subsubsection{kernel/read.h}
-In this file we we implemented the function \textit{int syscall\_read(uint32\_t, uint32\_t, uint32\_t);}
-This function is explained in the next section.
-\subsubsection{kernel/read.c}
-\textit{int syscall\_read(uint32\_t f\_handle, uint32\_t buffer\_addr, uint32\_t length)} takes three arguments:
-\begin{enumerate}
-    \item{uint32\_t f\_handle}
-        \\
-        f\_handle is a file handle which indicates which file to read from.
-        \\
-        In our implementation we do only care for the console which in the function is defined as "FILEHANDLE\_STDIN", defined in proc/syscall.h\\
-        Our implementation therefore distincts between 0 (FILEHANDLE\_STDIN) and everything else.\\
-        If the first argument is 0 the function will enter our implementation for reading from the console if it is anything else than 0 our implementation will return -1 because we did not implement a solution for reading from files. -1 simply indicates an error to the function that called syscall\_read
-    \item{uint32\_t buffer\_addr}
-        \\
-        buffer\_addr is the address to the buffer which will contain the read bytes from the console one the function has completed.
-    \item{uint32\_t length}
-        \\
-        length is the max size of bytes which may be read from the console - In our implementation we reserve one byte in the buffer\_addr in order to append a null terminating string to the bytes read from the console.
-\end{enumerate}
-In our implementation we are reading one byte at a time which allows our implementation to look for the return key. If the return key is pressed the function will stop reading from the console and the length of read bytes is returned. Everything read from the console is stored in buffer\_addr which the caller function provided when calling syscall\_read.\\
-The caller function then has access to what was read from the console because it provided the address to the buffer to syscall\_read.
-\\
-The actual length of read bytes is available to the caller function in a somewhat different manner.
-\\
-Once syscall\_read returns the length of bytes read it is returned to proc/syscall.c however this function returns void which means that we cannot return the value to the actual caller function, instead we are setting the variable V0 to the returned value - V0 is then returned to the caller function.
-\subsubsection{kernel/write.h}
-In this file we implemented the function \textit{int syscall\_write(uint32\_t, uint32\_t, uint32\_t);}
-This function is explained in the next section.
-\subsubsection{kernel/write.c}
-\textit{int syscall\_write(uint32\_t f\_handle, uint32\_t buffer\_addr, uint32\_t length)} is very similar to \textit{syscall\_read} in the sence that it takes the exact same arguments and they have the same meaning - The function is called in the same way and the return values are also the same.
-\\
-The difference between the two functions is, that \textit{syscall\_write} writes to the console whereas \textit{syscall\_read} reads from the console.
-\\
-\textit{syscall\_write} writes to the console one byte at a time untill it has written all the bytes provided by the buffer\_addr or untill the function has written the maximum allowed bytes set by the caller function.
-\\
-\\
-Once the function stops writing to the console, the function returns the length of actually written bytes.
-\\
-It does not store what it wrote to the console anywhere nor does it delete the buffer provided by the caller function.
-\subsubsection{proc/syscall.c}
-Inside this files we defined A0, A1, A2, A3 and V0 in order to avoid writing \textit{$user\_context->cpu\_regs[MIPS\_REGISTER\_A0]$} every time we needed the value of A0 for instance - This also ensures much cleaner and shorter code.
-\\
-We implemented two cases inside the switch to handle system calls to syscall\_read and syscall\_write.
-\\
-These function calls are provided with the arguments A1, A2 and A3 which corresponds to the file handle, buffer and the length.\\
-V0 is set to value return by the function calls which enables the actual caller function to see the result of either syscall\_read and syscall\_write
-\subsection{unit testing}
-\subsubsection{What do we test and where?}
-The tests are initialized from main.c which calls:
-\\
-\begin{itemize}
-  \item{unit\_test\_read}
-    \\
-    Tests that the read bytes are within the range of the limited length provided in the function call.
-    \\
-    We check that the length returned by syscall\_read() is between 1 and 64.
-    \\
-    This test is \textbf{passed}.
-  \item{unit\_test\_write}
-    \\
-    Tests that the written bytes are exactly the length provided in the function call.
-    \\
-    We check that the length returned by syscall\_write() is equal to the number of characters in the string.
-    \\
-    This test is \textbf{passed}.
-  \item{unit\_test\_read\_write}
-    \\
-    Reads from the console and writes what was read to the console.
-    \\
-    We check that the read length returned by syscall\_read() is exactly the same as the length written to the console.
-    \\
-    This test is \textbf{passed}.
-\end{itemize}
-\subsection{Makefile}
-The solution to Task 2 can be found in /buenos and we have expanded the existing Makefile.
-\\
-To run our solution use "make readwrite" in the buenos directory.
-\\
-Make readwrite will build our solution and run fyams-sim once it has compiled the source code - once the program starts it will run our tests/readwrite.c which initializes our unit tests.
+\section{Tests}
+\section{Worth mentioning}
 \end{document}
