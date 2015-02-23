@@ -178,4 +178,17 @@ We have implemented:
 \end{itemize}
 \section{Tests}
 \section{Worth mentioning}
+While our process\_join, process\_finish and process\_spawn works as intended we have discovered an error when shutting down our children while they are in the process of being initialized, although this error only occurs when a program runs, spawns a new program and immediately shuts down.
+\\
+Our tests have found it to happen within process\_start when trying to use kernel functions that have already been shut down by halt\_kernel().
+\\
+They problem may run deeper in the system, but a solution to the current problem could be to create a global lock for buenos/halt.c and proc/process.c to use.
+\\
+When halt\_kernel(void) in kernel/halt.c is called is should acquire a lock for the global lock, once obtained it should shut down the system without releasing the lock.
+\\
+\\
+process\_start in proc/process.c should also acquire the global lock before running its function, once obtained it should finish what is started and before exiting the function it should release the lock.
+\\
+\\
+This way the kernel will only shut down while some of its  is not in use.
 \end{document}
