@@ -63,9 +63,9 @@ Hold 1} \\[2cm]
 \subsection{Defining the data structure}
 In our data structure of our processes we wanted to make sure that the parent process could administer all of its children in case of early termination.
 \\
-We therefor implemented an array with the same size as the maximum process to ensure that any process had capacity for all possible processes.
+We therefor implemented an array with the same size as the maximum allowed processes to ensure that any process had capacity for all possible processes.
 \\
-We also implemented a count which counts how many the current parent has - This is only to shorten the algorithm when terminating the processes of a parent.
+We also implemented a child count variable which counts how many children the current parent has - This is only to shorten the algorithm when terminating the processes of a parent.
 \\
 \\
 We initially wanted to create a linked list that could increase in size as needed, but kmalloc is only available while the kernel is initializing, hence the static size of our array.
@@ -74,20 +74,45 @@ We initially wanted to create a linked list that could increase in size as neede
 The name of the executable file also has limitations due to kmalloc not being available and therefor we set the maximum size of the executable file name to be 64 characters.
 \\
 \\
-It is also essential to a process to hold the return given by the process. This is used in two places, when exiting a and when a process is waiting for another process.
+It is also essential for a process to be able to hold the return value given by the process.
+\\
+The data structure therefor includes a variable to hold retvel. This is used in two places, when exiting a processs and when a process is waiting for another process.
 \\
 \\
-A process state is also important when a process needs to wait for another process, we therefor implemented three different states: PROCESS\_FREE which states that the process is available to use, PROCESS\_RUNNING which states that the process is busy, however it does not state if it is the actual processes running, one will have to look at the state of a thread to determine this. The last state is PROCESS\_ZOMBIE which is set when a process terminates, this is used for processes waiting for another process to terminate.
+A process state is also important when a process needs to wait for another process, we therefor implemented three different states: PROCESS\_FREE which states that the process is available, PROCESS\_RUNNING which states that the process is busy, however it does not state if it is the actual processes running, one will have to look at the state of a thread to determine this.
+\\
+The last state is PROCESS\_ZOMBIE which is set when a process terminates, this is used for processes waiting for another process to terminate.
 \\
 \\
-lastly we implemented a container for the thread\_id belonging to the process.
+lastly we implemented a varible to hold the thread\_id belonging to the process.
 \\
-The reason for this container is to actually terminate the thread of a process if its parent die - We do not want to have any running threads in the background because of an eternal loop.
+The reason for this variable is be able to terminate the thread of a process if its parent die - We do not want to have any running threads in the background because of an eternal loop.
+\\
+\\
+The essential part of our data structure can be seen below and can also be found in proc/process.h
+\begin{verbatim}
+typedef enum {
+    PROCESS_FREE,
+    PROCESS_RUNNING,
+    PROCESS_ZOMBIE
+} process_state_t;
+
+
+typedef struct {
+    char executable[EXECUTABLE_LENGTH];
+    process_state_t state;
+    process_id_t parent_id;
+    int children[PROCESS_MAX_PROCESSES];
+    int child_count;
+    int retval;
+    int thread_id;
+} process_control_block_t;
+\end{verbatim}
 \subsection{System calls}
 \subsubsection{SYSCALL\_EXEC}
 To execute another program a program must call SYSCALL\_EXEC with a string as argument, the argument is a string that describes the disk it resides on and the name on the disk an example is "[disk]initprog".
 \\
-The call to the system call returns the process\_id of the newly created process created by process\_spawn which is called by SYSCALL\_EXEC.
+The system call returns the process\_id of the newly created process created by process\_spawn which is called by SYSCALL\_EXEC.
 \\
 The process id can be used to ask the program to wait until the newly executed program has terminated.
 \subsubsection{SYSCALL\_EXIT}
@@ -97,9 +122,10 @@ return actually calls SYSCALL\_EXIT so these are the same.
 \\
 SYSCALL\_EXIT never returns a value and it calls process\_finish which is explained in detail later.
 \subsubsection{SYSCALL\_JOIN}
-To have a program wait for another program, the program must call SYSCALL\_JOIN, the program calling this system call will wait untill the system call returns with a reponse, there is no telling of how long this system call will take to return a value and have the program continue its execution.
+To have a program wait for another program, the program must call SYSCALL\_JOIN, the program calling this system call will wait untill the system call returns with a reponse, there is no telling of how long this system call will take to return a value and have the program continue its execution but it will happen shortly after the process that is being waited for terminates since the scheduler is using the round robin method which equally shares its CPU time between its threads.
 \\
-SYSCALL\_JOIN takes one argument which is the process id of the process it wants to wait for, this id is granted when using SYSCALL\_EXEC.
+\\
+SYSCALL\_JOIN takes one argument which is the process id of the process it wants to wait for, this id is generated and returned by SYSCALL\_EXEC when it is called.
 \\
 SYSCALL\_JOIN calls process\_join which is explained in detail later. 
 \newpage
@@ -178,4 +204,17 @@ We have implemented:
 \end{itemize}
 \section{Tests}
 \section{Worth mentioning}
+While our process\_join, process\_finish and process\_spawn works as intended we have discovered an error when shutting down our children while they are in the process of being initialized, although this error only occurs when a program runs, spawns a new program and immediately shuts down.
+\\
+Our tests have found it to happen within process\_start when trying to use kernel functions that have already been shut down by halt\_kernel().
+\\
+They problem may run deeper in the system, but a solution to the current problem could be to create a global lock for buenos/halt.c and proc/process.c to use.
+\\
+When halt\_kernel(void) in kernel/halt.c is called is should acquire a lock for the global lock, once obtained it should shut down the system without releasing the lock.
+\\
+\\
+process\_start in proc/process.c should also acquire the global lock before running its function, once obtained it should finish what is started and before exiting the function it should release the lock.
+\\
+\\
+This way the kernel will only shut down while some of its  is not in use.
 \end{document}
