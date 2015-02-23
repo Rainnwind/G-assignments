@@ -38,7 +38,6 @@
 
 int main(void)
 {
-    syscall_exec("[disk]test2");
 //    print("I'm test2 counting to 50.000");
     int count = 50000;
      while (count > 0) {
