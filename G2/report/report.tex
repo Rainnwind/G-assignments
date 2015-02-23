@@ -203,6 +203,13 @@ We have implemented:
   When process\_finish signals the cpu that a process is about to terminate, this process is reactivated, but only if it's the process associated with pid. Once reactivated the loop runs again and if the state is PROCESS\_ZOMBIE it leaves the loop and the the process state is set to PROCESS\_FREE, the lock is released and the return value is return to the process that was waiting.
 \end{itemize}
 \section{Tests}
+The test can be run with the command make processTest which execute the test program procTest
+procTest first start a child procces of program test1 which we can call child1. child1 then start
+a child process of program test2. Test2 will therefore be grandchild of procTest.
+After procTest have startet child1, syscall_join on child1 is called and procTest therfore waits until
+child1 has terminatet before continiuing its execution and start a new process of test1 which we
+call child2. we also join on child2 before we call sysscall_halt.
+
 \section{Worth mentioning}
 While our process\_join, process\_finish and process\_spawn works as intended we have discovered an error when shutting down our children while they are in the process of being initialized, although this error only occurs when a program runs, spawns a new program and immediately shuts down.
 \\
