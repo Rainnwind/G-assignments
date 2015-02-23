@@ -38,12 +38,14 @@
 
 int main(void)
 {
+    char string[] = "test1 start a child\n";
+    printit(string, sizeof(string));
     syscall_exec("[disk]test2");
-//    print("I'm test1 counting to 500.000");
     int count = 500000;
      while (count > 0) {
         count--;
      }
-//     print("test2 done counting to 500.000/n");
+    char string2[] = "test1 I'm done\n";
+    printit(string2, sizeof(string2));
     return 0;
 }
