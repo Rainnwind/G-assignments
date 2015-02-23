@@ -39,5 +39,9 @@
 int main(void)
 {
     syscall_exec("[disk]test2");
+    int count = 500000;
+     while (count > 0) {
+        count--;
+     }
     return 0;
 }

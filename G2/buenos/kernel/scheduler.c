@@ -211,7 +211,6 @@ void scheduler_schedule(void)
     spinlock_release(&thread_table_slock);
 
     scheduler_current_thread[this_cpu] = t;
-    kprintf("<><><><><><><><><>thread active: %d<><><><><><><><><><><><><>\n", t);
 
     /* Schedule timer interrupt to occur after thread timeslice is spent */
     timer_set_ticks(_get_rand(CONFIG_SCHEDULER_TIMESLICE) +
