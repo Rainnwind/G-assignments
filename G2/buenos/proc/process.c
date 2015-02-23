@@ -70,8 +70,7 @@ spinlock_t process_table_slock;
  * Therefore this function is not suitable to allow startup of
  * arbitrary processes.
  *
- * @executable The name of the executable to be run in the userland
- * process
+ * @process_id: the index in the process_table, used to find the program that needs to be loaded into memory
  */
 void process_start(uint32_t process_id) {
     thread_table_t *my_entry;
@@ -198,6 +197,9 @@ void process_start(uint32_t process_id) {
 }
 
 
+/**
+ * Initializes the process_table by setting every process in process_table to its default state
+ */
 void process_init() {
     spinlock_reset(&process_table_slock);
     _interrupt_disable();
@@ -242,7 +244,16 @@ void process_remove_child(process_id_t parent_id, process_id_t child_id) {
         process_table[parent_id].children[child_id] = 0;
     }
 }
-
+/**
+ * Process spawn create a new process if an available process exists in process_table, the id of the newly created
+ * process is returned.
+ * If it fails to find an available process it returns -1 to indicate an error
+ *
+ * It is not needed to call process_start with the process_id returned by this function, a new thread is created and it's started inside this function
+ *
+ * @executable: is the name of the program that needs to be loaded into memory, the name is copied into the process data structure which is read by process_init
+ *              which is started by the function.
+ */
 process_id_t process_spawn(const char *executable) {
     process_id_t parent_id = process_get_current_process();
     process_id_t process_id = PROCESS_PTABLE_FULL;
@@ -294,6 +305,13 @@ process_id_t process_spawn(const char *executable) {
     return process_id;
 }
 
+/**
+ * Recursive functions which terminates every child belonging to the process_id given as argument
+ * It's recursive because every child potentially have children and they need to be terminated as well.
+ *
+ * @process_id: is the process_id used to identify the parent and to locate the children of the parent, every child
+ *              calls this function with their own process_id - If they have children
+ */
 void process_kill_children(process_id_t process_id) {
     for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
         if (process_table[process_id].children[i] == CHILD) {
@@ -322,8 +340,13 @@ void process_kill_children(process_id_t process_id) {
     }
 }
 
-/* Stop the process and the thread it runs in.  Sets the return value as
-   well. */
+/**
+ * Stop the process and the thread it runs in.
+ * Sets the return value as well.
+ * The process calling this function has its status set to be PROCESS_ZOMBIE in case a parent is listening to it
+ *
+ * @retval is the value return by the program - This is either given by return <some integer> or by using syscall_exit(<some integer>)
+ */
 void process_finish(int retval) {
     interrupt_status_t intr_status;
     thread_table_t *my_entry;
@@ -352,6 +375,13 @@ void process_finish(int retval) {
     thread_finish();
 }
 
+
+/**
+ * Makes a process with for another process to terminate, once a process calls this function it will
+ * not execute again untill the process it wants to wait for terminates.
+ *
+ * @pid: is the process_id of the process the caller wants to wait for
+ */
 int process_join(process_id_t pid) {
     interrupt_status_t intr_status;
     int retval;
