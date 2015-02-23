@@ -136,8 +136,10 @@ void init_startup_thread(uint32_t arg)
 
     process_join(process_id);
 
+//    halt_kernel();
+
     //This line should never be reached beucase initprog should call syscall_exit()
-    KERNEL_PANIC("Ran out of initprog.\n");
+  //  KERNEL_PANIC("Ran out of initprog.\n");
 }
 
 /* Whether other processors than 0 may continue in SMP mode.

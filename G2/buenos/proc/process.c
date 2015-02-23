@@ -304,16 +304,17 @@ void process_kill_children(process_id_t process_id) {
             if (process_table[i].child_count > 0) {
                 process_kill_children(i);
             }
-            kprintf("I want to kill you, but I can't :'(\n");
             spinlock_acquire(&thread_table_slock);
+            thread_table[process_table[i].thread_id].context->pc = (uint32_t)process_finish;
+            spinlock_release(&thread_table_slock);
 
-            if (thread_table[process_table[i].thread_id].pagetable != NULL) {
+            kprintf("I want to kill you, but I can't :'(\n");
+
+/*            if (thread_table[process_table[i].thread_id].pagetable != NULL) {
                 vm_destroy_pagetable(thread_table[process_table[i].thread_id].pagetable);
                 thread_table[process_table[i].thread_id].pagetable = NULL;
             }
-
-            thread_table[process_table[i].thread_id].context->pc = (uint32_t)thread_finish;
-            spinlock_release(&thread_table_slock);
+*/
 
             process_table[process_id].child_count--;
             count++;

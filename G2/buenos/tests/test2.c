@@ -39,7 +39,7 @@
 int main(void)
 {
     while(1) {
-
+        syscall_write(1, "a", 1);
     }
     return 0;
 }
