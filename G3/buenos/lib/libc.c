@@ -44,7 +44,7 @@ extern void _shutdown(void);
 
 
 /*** @name Library routines
- * 
+ *
  * This module implements various library routines.
  *
  * @{
@@ -77,7 +77,7 @@ void kwrite(char *s)
  * @param len The length of the buffer \texttt{s}.
  *
  */
-void kread(char *s, 
+void kread(char *s,
            int len)
 {
     int ch;
@@ -119,7 +119,7 @@ int stringcmp(const char *str1, const char *str2)
     }
 
     /* Dummy return to keep gcc happy */
-    return 0; 
+    return 0;
 }
 
 /**
@@ -191,7 +191,7 @@ void memcopy(int buflen, void *target, const void *source)
     if(((uint32_t)tgt % 4) != 0 || ((uint32_t)src % 4) != 0 ) {
 	t = (char *)tgt;
 	s = (const char *)src;
-	
+
 	for(i = 0; i < buflen; i++) {
 	    t[i] = s[i];
 	}
@@ -204,11 +204,11 @@ void memcopy(int buflen, void *target, const void *source)
 	tgt++;
 	src++;
     }
-    
+
 
     t = (char *)tgt;
     s = (const char *)src;
-    
+
     for(i = 0; i < (buflen%4); i++) {
 	t[i] = s[i];
     }

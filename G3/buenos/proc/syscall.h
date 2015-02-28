@@ -58,6 +58,8 @@
 #define SYSCALL_SEM_OPEN    0x300
 #define SYSCALL_SEM_PROCURE 0x301
 #define SYSCALL_SEM_VACATE  0x302
+//Added as it was needed
+#define SYSCALL_SEM_CLOSE  0x303
 
 /* When userland program reads or writes these already open files it
  * actually accesses the console.

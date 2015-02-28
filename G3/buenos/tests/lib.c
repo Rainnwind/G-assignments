@@ -44,7 +44,7 @@
 
 
 /* Halt the system (sync disks and power off). This function will
- * never return. 
+ * never return.
  */
 void syscall_halt(void)
 {
@@ -67,8 +67,8 @@ int syscall_exec(const char *filename)
  */
 int syscall_execp(const char *filename, int argc, const char **argv)
 {
-    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename, 
-                         (uint32_t) argc, 
+    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename,
+                         (uint32_t) argc,
                          (uint32_t) argv);
 }
 
@@ -126,7 +126,7 @@ int syscall_open(const char *filename)
 
 
 /* Close the open file identified by 'filehandle'. Zero will be returned
- * success, other values indicate errors. 
+ * success, other values indicate errors.
  */
 int syscall_close(int filehandle)
 {
@@ -147,7 +147,7 @@ int syscall_read(int filehandle, void *buffer, int length)
 
 
 /* Set the file position of the open file identified by 'filehandle'
- * to 'offset'. Returns 0 on success or a negative value on error. 
+ * to 'offset'. Returns 0 on success or a negative value on error.
  */
 int syscall_seek(int filehandle, int offset)
 {
@@ -168,7 +168,7 @@ int syscall_write(int filehandle, const void *buffer, int length)
 
 
 /* Create a file with the name 'filename' and initial size of
- * 'size'. Returns 0 on success and a negative value on error. 
+ * 'size'. Returns 0 on success and a negative value on error.
  */
 int syscall_create(const char *filename, int size)
 {
@@ -177,11 +177,27 @@ int syscall_create(const char *filename, int size)
 
 
 /* Remove the file identified by 'filename' from the file system it
- * resides on. Returns 0 on success or a negative value on error. 
+ * resides on. Returns 0 on success or a negative value on error.
  */
 int syscall_delete(const char *filename)
 {
     return (int)_syscall(SYSCALL_DELETE, (uint32_t)filename, 0, 0);
+}
+
+usr_sem_t* syscall_sem_open(char const* name, int value) {
+  return (usr_sem_t*)_syscall(SYSCALL_SEM_OPEN, (uint32_t)name, (uint32_t)value, 0);
+}
+
+int syscall_sem_p(usr_sem_t* handle) {
+  return (int)_syscall(SYSCALL_SEM_PROCURE, (uint32_t)handle, 0, 0);
+}
+
+int syscall_sem_v(usr_sem_t* handle) {
+  return (int)_syscall(SYSCALL_SEM_VACATE, (uint32_t)handle, 0, 0);
+}
+
+int syscall_sem_destroy(usr_sem_t* handle) {
+  return (int)_syscall(SYSCALL_SEM_CLOSE, (uint32_t)handle, 0, 0);
 }
 
 /* The following functions are not system calls, but convenient
@@ -190,7 +206,7 @@ int syscall_delete(const char *filename)
 #ifdef PROVIDE_STRING_FUNCTIONS
 
 /* Return the length of the string pointed to by s. */
-size_t strlen(const char *s)
+size_t strlen_userland(const char *s)
 {
   size_t i;
   for (i=0; s[i]; i++);
@@ -230,12 +246,12 @@ char *strncpy(char *dest, const char *src, size_t n)
    enough room before calling this function. */
 char *strcat(char *dest, const char *src)
 {
-  return strcpy(dest+strlen(dest), src);
+  return strcpy(dest+strlen_userland(dest), src);
 }
 
 char *strncat(char *dest, const char *src, size_t n)
 {
-  size_t dest_len = strlen(dest);
+  size_t dest_len = strlen_userland(dest);
   size_t i;
 
   for (i = 0; i < n && src[i] != '\0'; i++) {
@@ -280,7 +296,7 @@ int memcmp(const void* s1, const void* s2,size_t n)
 
 char *strstr(const char *s1, const char *s2)
 {
-  size_t n = strlen(s2);
+  size_t n = strlen_userland(s2);
   while(*s1)
     if(!memcmp(s1++,s2,n))
       return (char*)s1-1;
@@ -310,7 +326,7 @@ void *memcpy(void *dest, const void *src, size_t n) {
 
 /* Write c to standard output.  Returns a positive integer on
    success. */
-int putc(char c)
+int putc_userland(char c)
 {
   return syscall_write(stdout, &c, 1);
 }
@@ -319,7 +335,7 @@ int putc(char c)
    non-negative integer on success. */
 int puts(const char* s)
 {
-  int len = strlen(s);
+  int len = strlen_userland(s);
   int written = 0;
   int ret;
 
@@ -373,20 +389,20 @@ ssize_t readline(char *s, size_t size)
     switch (c) {
     case '\r': /* Treat as newline */
     case '\n':
-      putc('\n');
+      putc_userland('\n');
       goto stop;
       break;
     case 127:
       if (count > 0) {
-        putc('\010');
-        putc(' ');
-        putc('\010');
+        putc_userland('\010');
+        putc_userland(' ');
+        putc_userland('\010');
         count--;
       }
       break;
     default:
       if (count<size-1) {
-        putc(s[count++]=c);
+        putc_userland(s[count++]=c);
       }
     }
   }
@@ -413,7 +429,7 @@ ssize_t readline(char *s, size_t size)
 static void printc(char *buf, char c, int flags) {
   if (flags & FLAG_TTY) {
     /* do not output (terminating) zeros to TTY */
-    if (c != '\0') putc(c);
+    if (c != '\0') putc_userland(c);
   } else
     *buf = c;
 }
@@ -438,7 +454,7 @@ static int print_uint(char *buf,
   int i = 0, written = 0;
 
   if (size <= 0) return 0;
-  
+
   /* produce the number string in reverse order to the temp buffer 'rev' */
   do {
     if (flags & FLAG_SMALLS)
@@ -585,7 +601,7 @@ static int vxnprintf(char *buf,
         printc(buf++, ' ', flags);
         written++;
       }
-      
+
       w = print_uint(buf, size-written, arg, 10, flags, 0, 0);
       buf += w;
       written += w;
@@ -652,7 +668,7 @@ static int vxnprintf(char *buf,
     }
   }
   /* the string was truncated */
-  if (written == size) { 
+  if (written == size) {
     buf--;
     written = -1;
   }
@@ -708,7 +724,7 @@ void heap_init()
 }
 
 
-/* Return a block of at least size bytes, or NULL if no such block 
+/* Return a block of at least size bytes, or NULL if no such block
    can be found.  */
 void *malloc(size_t size) {
   free_block_t *block;
@@ -730,7 +746,7 @@ void *malloc(size_t size) {
   for (block = free_list, prev_p = &free_list;
        block;
        prev_p = &(block->next), block = block->next) {
-    if ( (int)( block->size - size - sizeof(size_t) ) >= 
+    if ( (int)( block->size - size - sizeof(size_t) ) >=
          (int)( MIN_ALLOC_SIZE+sizeof(size_t) ) ) {
       /* Block is too big, but can be split. */
       block->size -= size+sizeof(size_t);
@@ -762,7 +778,7 @@ void free(void *ptr)
     /* Iterate through the free list, which is sorted by
        increasing address, and insert the newly freed block at the
        proper position. */
-    for (cur_block = free_list, prev_block = NULL; 
+    for (cur_block = free_list, prev_block = NULL;
          ;
          prev_block = cur_block, cur_block = cur_block->next) {
       if (cur_block > block || cur_block == NULL) {
@@ -840,7 +856,7 @@ int atoi(const char *nptr)
 {
   int i;
   int retval = 0;
-  int n = strlen(nptr);
+  int n = strlen_userland(nptr);
   for (i = 0; i < n; i++) {
     if (nptr[i] < '0' || nptr[i] > '9') {
       break;

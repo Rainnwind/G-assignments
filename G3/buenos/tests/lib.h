@@ -40,14 +40,12 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include "lib/types.h"
+#include "proc/semaphore.h"
 
 /* Filehandles for input and output */
 #define stdin 0
 #define stdout 1
 #define stderr 2
-
-/* User semaphore */
-typedef void usr_sem_t;
 
 /* POSIX-like integer types */
 typedef uint8_t byte;
@@ -75,6 +73,51 @@ int syscall_write(int filehandle, const void *buffer, int length);
 int syscall_create(const char *filename, int size);
 int syscall_delete(const char *filename);
 
+/**
+ * Creates a new semaphore if one is available
+ *
+ * @name:   the name of the semaphore is used as a reference
+ * @value:  The initial value of the semaphore
+ *
+ * Returns  a handle if a new semaphore is created, if the semaphore by the name
+ *          already exists NULL is retured
+ *          Finally if an error occurs a negative number is returned to indicate an error
+ */
+usr_sem_t* syscall_sem_open(char const* name, int value);
+
+/**
+ * Subtracts 1 from the the value of the semaphore - If the value of the semaphore
+ *          is 0 this call will block another process unblocks it by calling `syscall_sem_p`
+ *
+ * @handle: A handle was given upon creation of a semaphore, that handle
+ *          is used to access the semaphore
+ *
+ * Returns  0 on success and a negative number on error
+ */
+int syscall_sem_p(usr_sem_t* handle);
+
+/**
+ * Adds 1 to the the value of the semaphore - if a process is blocked by calling `syscall_sem_open` it will
+ *          be unblocked
+ *
+ * @handle: A handle was given upon creation of a semaphore, that handle
+ *          is used to access the semaphore
+ *
+ * Returns  0 on success and a negative number on error
+ */
+int syscall_sem_v(usr_sem_t* handle);
+
+/**
+ * Destroys a semaphore thus making the semaphore referenced to by handle will be unavailble
+ *
+ * @handle: A handle was given upon creation of a semaphore, that handle
+ *          is used to access the semaphore
+ *
+ * Returns  0 if the semaphore was destroyed successfully
+ *          -1 if the semaphore was not destroyed - This will happen if some process is blocked by the semaphore
+ */
+int syscall_sem_destroy(usr_sem_t* handle);
+
 int syscall_fork(void (*func)(int), int arg);
 void *syscall_memlimit(void *heap_end);
 
@@ -96,7 +139,7 @@ void *syscall_memlimit(void *heap_end);
 #define PROVIDE_MISC
 
 #ifdef PROVIDE_STRING_FUNCTIONS
-size_t strlen(const char *s);
+size_t strlen_userland(const char *s);
 char *strcpy(char *dest, const char *src);
 char *strncpy(char *dest, const char *src, size_t n);
 char *strcat(char *dest, const char *src);

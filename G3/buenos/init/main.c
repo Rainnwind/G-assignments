@@ -56,6 +56,7 @@
 #include "net/network.h"
 #include "proc/process.h"
 #include "vm/vm.h"
+#include "proc/semaphore.h"
 
 /**
  * Fallback function for system startup. This function is executed
@@ -222,6 +223,9 @@ void init(void)
 
     kwrite("Initializing virtual memory\n");
     vm_init();
+
+    kwrite("Initializing userland semaphores\n");
+    userland_semaphore_init();
 
     kprintf("Creating initialization thread\n");
     startup_thread = thread_create(&init_startup_thread, 0);

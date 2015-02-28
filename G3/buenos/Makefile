@@ -141,6 +141,23 @@ clean:	utilclean
 real-clean: clean
 	rm -f $(DEPS)
 
+
+# Make command for G3
+prog = semaphore_test
+prog2 = semaphore_test2
+prog3 = semaphore_test3
+cleardisk = if [ -f fyams.harddisk ] ; \
+	then \
+		rm fyams.harddisk; \
+	fi;
+maketests = make -C tests/
+createdisk = util/tfstool create fyams.harddisk 2048 disk
+writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) && util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)
+rundisk = fyams-sim buenos initprog=[disk]$(prog)
+semaphore: all
+	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
+
+
 .PHONY: clean
 .PHONY: doc
 .PHONY: submit-archive buenos-g1.tar.gz

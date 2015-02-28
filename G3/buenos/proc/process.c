@@ -45,6 +45,7 @@
 #include "drivers/yams.h"
 #include "vm/vm.h"
 #include "vm/pagepool.h"
+#include "proc/semaphore.h"
 
 
 /** @name Process startup
@@ -351,5 +352,4 @@ process_id_t process_get_current_process(void) {
 process_control_block_t *process_get_current_process_entry(void) {
     return &process_table[process_get_current_process()];
 }
-
 /** @} */
