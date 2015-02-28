@@ -1,38 +1,29 @@
-#ifndef QUEUE_GUARD
-#define QUEUE_GUARD
+#define NUM_LIST_IN_HASHTABLE 8;
 
-#define DONE 0
-#define UNINITIALIZED -1
-
-#define MAX_CONSUMERS 100
-#define MAX_PRODUCERS 10
+//parameter for the function get_list. MIN to return a random list with few items
+//MAX to return a list with many values
+#define MIN 0;  
+#define MAX 1;
 
 typedef struct node {
-    pthread_mutex_t next_lock;  //Used for fined grain locking
 	void *item;
 	struct node *next;
 } node_t;
 
-typedef struct queue {
+typedef struct list {
 	node_t	*head;
 	node_t	*tail;
-} queue_t;
+} list_t;
 
-/**
- * queue_init initializes a new queue
- *
- * It is expected that this function is only called once.
- */
-void queue_init(queue_t *q);
+typedef struct table {
+    list_t table[NUM_LIST_IN_HASHTABLE];
+    int num_items;
+}
+/* table_init initializes a new table */
+void table_init(table_t *t);
 
-/**
- * queue_put adds the item to the tail of the queue
- */
-void queue_put(queue_t *q, void *item);
+/* table_put adds the item to the tail of the table */
+void table_put(table_t *t, void *item);
 
-/**
- * queue_get removes and returns the head of the queue in item
- */
-void *queue_get(queue_t *q);
-
-#endif //QUEUE_GUARD
+/* table_get removes and returns the head of the table in item */
+void *table_get(table_t *t);
