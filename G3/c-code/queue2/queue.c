@@ -150,7 +150,7 @@ void *thread_putter(void *list) {
 
     for (int i = 0; i < 500; i++) {
         int *item = (int *)malloc(sizeof(int));
-        *item = 2;
+        *item = i;
         queue_put_list_t(list, item);
     }
 
