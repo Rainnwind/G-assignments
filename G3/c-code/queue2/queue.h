@@ -8,8 +8,8 @@
 #define PUTTERS_UNINITIALIZED -1
 #define DONE 0
 
-#define MAX_PUTTERS 4000
-#define MAX_GETTERS 400
+#define MAX_PUTTERS 40
+#define MAX_GETTERS 40
 
 typedef struct {
     void *item;
