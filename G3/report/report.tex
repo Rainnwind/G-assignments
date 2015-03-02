@@ -17,6 +17,26 @@
 \usepackage{mathtools}
 \usepackage{amsmath}
 \usepackage{multicol}
+\usepackage{color}
+\usepackage{listings}
+\lstset{ %
+language=C,                % choose the language of the code
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=single,           % adds a frame around the code
+tabsize=2,          % sets default tabsize to 2 spaces
+captionpos=b,           % sets the caption-position to bottom
+breaklines=true,        % sets automatic line breaking
+breakatwhitespace=false,    % sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)}          % if you want to add a comment within your code
+}
 \pagestyle{fancy}
 %Setting link borders to none
 \hypersetup{pdfborder = {0 0 0}}
@@ -61,6 +81,139 @@ Hold 1} \\[2cm]
 \newcommand{\minus}[1]{{#1}^{-}}
 \section{Task 1: A thread-safe unbounded queue}
 \subsection{implementation}
+In this section we will explain how we implemented our thread-safe unbounded queue.
+\\
+\\
+We chose to ignore the example provided by the assignment and wrote our own dynamic array.
+\\
+\\
+These are the most essential parts of our program and is a snippet from our queue.h file
+\begin{lstlisting}
+typedef struct {
+    void *item;
+    pthread_mutex_t lock;
+} node_t;
+
+typedef struct {
+    node_t *array;
+    int max_size;
+    pthread_mutex_t update_array_lock;
+    pthread_cond_t update_condition;
+    pthread_mutex_t users_lock;
+    pthread_cond_t users_condition;
+    int users;
+    int is_updating;
+} list_t;
+\end{lstlisting}
+As we can see in the snippet we have an array inside the list\_t struct which contains every node\_t struct that is being inserted in our implementation by multiple threads.
+\\
+\\
+We have decided to keep track of how many threads are currently writing or reading from the array, to do this we use two pthread\_mutex\_t, two pthread\_cond\_t variables and two int variables to keep track of when we may expand our array and when we are allowed to either read or write in our array.
+\\
+\\
+In our implementation we have four basic functions
+\begin{itemize}
+  \item{void queue\_init\_list\_t(list\_t *list)}
+  \\
+  Initializing the queue is expected to be done in a single thread since it does not take into account that multiple might want to initialize the same list which would reset the list and cause a memory leak if any of the entries in the array are filled with allocated data.
+  \item{void queue\_put\_list\_t(list\_t *list, void *item)}
+  \\
+  In this function we are inserting an item in to the list array object, we do this by iterating through every entry in the array untill we acquice a mutex lock, ince acquired we check if the item is NULL, if it is, we keep looking in the array.
+  \\
+  Because the array must be dynamic we want to have a way to handle expansion of the array but we also want to handle when we are allowed to expand the array and when we are allowed to insert into the array.
+  \\
+\begin{lstlisting}
+void queue_put_list_t(list_t *list, void *item) {
+    pthread_mutex_lock(&list->update_array_lock);
+    while (list->is_updating != 0) {
+        pthread_cond_wait(&list->update_condition, &list->update_array_lock);
+    }
+    pthread_mutex_unlock(&list->update_array_lock);
+    ...
+}
+\end{lstlisting}
+  In this code snippet we are waiting for the up\_updating to be 0, once it is we may write into the array, otherwise we are waiting until the condition is signaled to resume.
+  \\
+\begin{lstlisting}
+void queue_put_list_t(list_t *list, void *item) {
+    ...
+    pthread_mutex_lock(&list->users_lock);
+    list->users++;
+    pthread_mutex_unlock(&list->users_lock);
+    ...
+    pthread_mutex_lock(&list->users_lock);
+    list->users--;
+    pthread_cond_signal(&list->users_condition);
+    pthread_mutex_unlock(&list->users_lock);
+    ...
+}
+\end{lstlisting}
+   in these sections of code we are increasing and decreasing how many are inserting into the array.
+   \\
+   on line 9 we see that we are signaling a thread that is listening to users\_condition variable that a user has exited, this is how we keep track of when it is allowed to expand the array - When users is 0.
+   \\
+   We will see how these variables are used in queue\_expand\_list\_t.
+\newpage
+\begin{lstlisting}
+void queue_put_list_t(list_t *list, void *item) {
+    ...
+      for (int i = 0; i < max_size; i++) {
+        if (pthread_mutex_trylock(&list->array[i].lock) == 0) {
+          if (list->array[i].item == NULL) {
+            list->array[i].item = item;
+            found = 1;
+            pthread_mutex_unlock(&list->array[i].lock);
+            break;
+          }
+          pthread_mutex_unlock(&list->array[i].lock);
+        }
+      }
+    ...
+}
+\end{lstlisting}
+This is our inserting algorithm, we realize that the insertion time is very slow which is also why we are using trylock instead of a regular lock, one reason is speed, it will not block and our reason using this type is, that we do not want to wait since another entry is most likely free to lock, the other reason is that it is very likely that another thread is writing into that very entry we want to lock and so when obtaining the there is a very high risk that the item is not NULL and we will have to check the next again, but with trylock this will be very fast since it's not required to block, it will just skip the entry if it is not able to lock.
+  \item{void *queue\_get\_list\_t(list\_t *list)}
+  \\
+  The algorithm is exactly the same as putting an item into the array except that we are taking an item from the array and setting it's value to NULL on success, this way we free up the entry for the next item to be inserted.
+  \item{void queue\_expand\_list\_t(list\_t *list, void *item)}
+  \\
+  This function handles the expansion of a list and is only called by void queue\_put\_list\_t when it fails to insert an item in that it assumes that the array must be full since it failed to insert.
+\newpage
+\begin{lstlisting}
+void queue_expand_list_t(list_t *list, void *item) {
+    int i_update = 0;
+    pthread_mutex_lock(&list->update_array_lock);
+    if (list->is_updating == 0) {
+        list->is_updating = 1;
+        i_update = 1;
+    }
+    pthread_mutex_unlock(&list->update_array_lock);
+    if (i_update == 1) {
+      pthread_mutex_lock(&list->users_lock);
+      while (list->users > 0) {
+          pthread_cond_wait(&list->users_condition, &list->users_lock);
+      }
+      pthread_mutex_unlock(&list->users_lock);
+      ...
+      list->is_updating = 0;
+      pthread_cond_broadcast(&list->update_condition);
+    }
+    queue_put_list_t(list, item);
+}
+\end{lstlisting}
+In this snippet we see how we make sure that only one thread expands the array to avoid undefined behaviour.
+\\
+The first thread to acquire the lock will set the is\_updating variable to 1 and also set a local variable i\_update to 1.
+\\
+Any other thread getting a lock will do nothing and just skip the entire function and retry inserting the item as we see on line 13.
+\\
+\\
+The most important part to notice is on line 10 through17.
+\\
+Because we have set the is\_updating to 1, any thread trying to either get or insert an item into the array is told to wait for is\_updating to turn to 0 which means that we need not hold a lock while updating the array because only one thread is guaranteed to access that particular area of code at a time and only when the array appears to be empty.
+\\
+Once the array has been expanded to twice its size we simply set the is\_updating to 0 and tell every thread waiting for that condition to be true that they may continue from where they stopped, we use broadcast in this case because one or more thread may be waiting for the condition and signal would only tell one thread to continue.
+\end{itemize}
 \subsection{Tests}
 \section{Task 2: Userland semaphores for Buenos}
 \subsection{Where we made changes}
