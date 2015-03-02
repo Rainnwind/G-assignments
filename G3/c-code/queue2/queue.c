@@ -1,18 +1,9 @@
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "queue.h"
 
 int putters_count = PUTTERS_UNINITIALIZED;
 pthread_mutex_t putters_lock = PTHREAD_MUTEX_INITIALIZER;
-
-//used for testing
-int put_count = 0;
-pthread_mutex_t put_lock = PTHREAD_MUTEX_INITIALIZER;
-
-//used for testing
-int get_count = 0;
-pthread_mutex_t get_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void queue_init_list_t(list_t *list) {
     node_t *tmp_array = (node_t *)malloc(MAX_INIT_SIZE * (sizeof(node_t)));
@@ -157,12 +148,6 @@ void *thread_putter(void *list) {
     }
     pthread_mutex_unlock(&putters_lock);
 
-    //used for testing
-    pthread_mutex_lock(&put_lock);
-    put_count++;
-    pthread_mutex_unlock(&put_lock);
-
-
     for (int i = 0; i < 500; i++) {
         int *item = (int *)malloc(sizeof(int));
         *item = i;
@@ -186,12 +171,6 @@ void *thread_getter(void *list) {
             printf("ffs....\n");
         } else {
             printf("Uhh... I've got it :): %d\n", *(int *)item2);
-
-            //used for testing
-            pthread_mutex_lock(&get_lock);
-            get_count++;
-            pthread_mutex_unlock(&get_lock);
-
         }
     }
     return NULL;
@@ -235,7 +214,5 @@ int main() {
             exit(6);
         }
     }
-    printf("put_count %d\n get_count %d\n", put_count, get_count);
-    assert(put_count == get_count);
     return 0;
 }
