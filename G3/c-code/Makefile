@@ -1,4 +1,4 @@
-flags = -Wall -pedantic -std=gnu11
+flags = -Wall -pedantic -std=gnu11 -lpthread
 links = -lpthread
 compiler = gcc
 progs = queue.c

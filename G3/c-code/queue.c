@@ -18,11 +18,11 @@ void table_init(table_t *t) {
 		new->item = 0;
 		list_t *newlist = malloc(sizeof(list_t));
 		newlist->head = newlist->tail = new;
-		*(newlist->count) = 0;
+		newlist->count = 0;
         pthread_mutex_init(&(*newlist).llock, NULL);
 		
 		(*t).table[i] = newlist;
-		
+		t->exit = false;
 	}
 }
 
@@ -42,7 +42,7 @@ void table_put(table_t *t, void *item) {
 
 	list->tail->next = new;
 	list->tail = new;
-	*(list->count) = *(list->count) + 1;
+	list->count = list->count + 1;
 
 	/*realease loock*/
 	int retval = pthread_mutex_unlock(&(list->llock));
@@ -52,65 +52,70 @@ void table_put(table_t *t, void *item) {
 void *table_get(table_t *t) {
 
 	// return the index of a list in the table to get an
-	// intem from and lock the list.
-	list_t list = get_list(t, GET);
-	if(list == null){
-		return 0;
-	}
-	node_t *old = t[list]->head;
+	// item from and lock the list.
+	list_t *list = (get_list(t, GET));
+
+	node_t *old = list->head;
 
 	void *item = old->next->item;
 
 	/* update the head and free the old memory */
-	t[list]->head = old->next;
-	free(old);
+	list->head = old->next;
+	list->count = list->count - 1;
+	
 	/*realease loock*/
-	int retval = pthread_mutex_unlock(&(t->table[list]->lock));
+	int retval = pthread_mutex_unlock(&(list->llock));
+	free(old);
 	assert(retval == 0);
-		
 	return item;
 }
 list_t *get_list(table_t *t, int mode){
-	case mode
-
-	case 0;
+	int retval = -1;
+	int i = 0;
+	int rand_table;
+    if(mode == 0){ //mode put
  		//return index of a random chosen list in the table
-		int i = 0;
 		do{
-    		rand((unsigned)time(NULL));
-    		int rand_table = random_int(NUM_LIST_IN_TABLE);
-    		int retval = pthread_mutex_lock(&(t->table[rand_table]->llock);
-  		} while (!(retval == 0 && i++ < NUM_LIST_IN_TABLE); 
-		return t.table[rand_table];
-
-
-	case 1;
-		//Itereate the lists in the table to find a nonempty list
-		//return -1 if there are no more items to get.
-		for (int i = 0; i < count; ++i)
+	    	rand_table = random_int(NUM_LIST_IN_TABLE);
+	    	retval = pthread_mutex_lock(&(t->table[rand_table]->llock));
+	  	} while (!(retval == 0 && i++ < NUM_LIST_IN_TABLE)); 
+		return t->table[rand_table];
+	}
+	else { //mode get
+	    //Itereate the lists in the table to find a nonempty list:
+		//set table.exit to true if there are no more items.
+		for (int i = 0; i < NUM_LIST_IN_TABLE; ++i)
 		{
+			list_t *list = t->table[i];
+			int count = (int)*(list->count);
 			//if found and a lock could be aquired return the index of the list
-			if(*(t->table[i]->head->item) > 0 && pthread_mutex_unlock(&(t->table[i]->llock) == 0) {
-				return t.table[i]; 
+			if( count > 0 && pthread_mutex_unlock(&(t->table[i]->llock)) == 0) {
+				return t->table[i];
 			}
 		}
-		return null;		
-
+		t->exit = true;
+	}
+	return t->table[i]; //not used, but we need to return some list		
 }
-int main(int argc, char **argv) {
-	queue_t q;
-
-	queue_init(&q);
-
+int main(int argc, char* argv[]) {
+	printf("1111111111111");
+	table_t *table = malloc(sizeof(table_t));
+	if (table == NULL) {
+		perror("malloc failed");
+		exit(EXIT_FAILURE);
+	}
+	
+	table_init(table);
+	printf("222222222");
 	int val = 42;
 
-	queue_put(&q, &val);
-	queue_put(&q, &val);
+	table_put(table, &val);
+	table_put(table, &val);
 
-	assert(42 == *(int *)queue_get(&q));
-	assert(42 == *(int *)queue_get(&q));
-	assert(NULL == queue_get(&q));
-	assert(NULL == queue_get(&q));
+	assert(42 == *(int *)table_get(table));
+	assert(42 == *(int *)table_get(table));
+	assert(NULL == table_get(table));
+	assert(NULL == table_get(table));
 
 	return 0;
 }

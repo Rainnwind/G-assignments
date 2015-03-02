@@ -13,7 +13,7 @@ typedef struct node {
 
 typedef struct list {
 	pthread_mutex_t llock;
-    int *count;
+    int count;
 	node_t	*head;
 	node_t	*tail;
 
@@ -21,6 +21,7 @@ typedef struct list {
 
 typedef struct table {
     list_t *table[NUM_LIST_IN_TABLE];
+    bool exit;
 } table_t;
 
 //generate a random number in the range 0 to NUM_LIST_IN_TABLE
