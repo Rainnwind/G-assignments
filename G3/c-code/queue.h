@@ -1,4 +1,5 @@
-
+#include <pthread.h>
+#include <stdlib.h>
 #define NUM_LIST_IN_TABLE 8
 
 //parameter for the function get_list. MIN to return a random list with few items
@@ -16,12 +17,14 @@ typedef struct list {
     int count;
 	node_t	*head;
 	node_t	*tail;
-
+	struct list *next;
 } list_t;
 
+// table of lists
 typedef struct table {
-    list_t *table[NUM_LIST_IN_TABLE];
-    bool exit;
+  list_t *head; 
+  list_t *tail;
+  bool exit;
 } table_t;
 
 //generate a random number in the range 0 to NUM_LIST_IN_TABLE

@@ -7,6 +7,10 @@
 #include "queue.h"
 
 void table_init(table_t *t) {
+		
+	table_t *newtable = malloc(sizeof(table_t));
+	newtable->head = newtable->tail = NULL;
+	
 	for(int i = 0; i < NUM_LIST_IN_TABLE; i++){
 		node_t *new = malloc(sizeof(node_t));
 		if (new == NULL) {
@@ -20,9 +24,17 @@ void table_init(table_t *t) {
 		newlist->head = newlist->tail = new;
 		newlist->count = 0;
         pthread_mutex_init(&(*newlist).llock, NULL);
-		
-		(*t).table[i] = newlist;
-		t->exit = false;
+        if (newtable->head == NULL)
+        {
+           	newtable->head = newlist;
+           	newtable->tail = newlist;
+           	newtable->tail->next = newlist;
+		}
+		else
+		{
+			newtable->tail->next = newlist;
+			newtable->tail = newlist;
+		}
 	}
 }
 
@@ -38,8 +50,8 @@ void table_put(table_t *t, void *item) {
 
 	// get a pointer to a list in were a lock
 	// has been aquired
-	list_t *list = get_list(t, PUT);
-
+	list_t *list = malloc(sizeof(list));
+	list = get_list(t, PUT);  
 	list->tail->next = new;
 	list->tail = new;
 	list->count = list->count + 1;
@@ -70,32 +82,37 @@ void *table_get(table_t *t) {
 	return item;
 }
 list_t *get_list(table_t *t, int mode){
-	int retval = -1;
-	int i = 0;
-	int rand_table;
+	
+	list_t *list = malloc(sizeof(list_t));	
+	list = t->tail;
+	
     if(mode == 0){ //mode put
- 		//return index of a random chosen list in the table
+    	//return pointer to a random chosen list in the table
+    	int retval = -1;
 		do{
-	    	rand_table = random_int(NUM_LIST_IN_TABLE);
-	    	retval = pthread_mutex_lock(&(t->table[rand_table]->llock));
-	  	} while (!(retval == 0 && i++ < NUM_LIST_IN_TABLE)); 
-		return t->table[rand_table];
+	    	int rand_list = random_int(NUM_LIST_IN_TABLE);
+	    	for(int j = 0; j < rand_list; j++){
+	    		list = list->next;
+	    	}
+	    	retval = pthread_mutex_lock(&(*list).llock);
+	  	} while (!(retval == 0)); 
+		return list;
 	}
 	else { //mode get
 	    //Itereate the lists in the table to find a nonempty list:
 		//set table.exit to true if there are no more items.
 		for (int i = 0; i < NUM_LIST_IN_TABLE; ++i)
 		{
-			list_t *list = t->table[i];
-			int count = (int)*(list->count);
+			int count = list->count;
 			//if found and a lock could be aquired return the index of the list
-			if( count > 0 && pthread_mutex_unlock(&(t->table[i]->llock)) == 0) {
-				return t->table[i];
+			if( count > 0 && pthread_mutex_unlock(&(list->llock)) == 0) {
+				return list;
 			}
+			list = list->next;
 		}
 		t->exit = true;
 	}
-	return t->table[i]; //not used, but we need to return some list		
+	return list; //not used, but we need to return a list		
 }
 int main(int argc, char* argv[]) {
 	printf("1111111111111");
