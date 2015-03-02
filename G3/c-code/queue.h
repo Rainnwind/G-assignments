@@ -1,9 +1,10 @@
-#define NUM_LIST_IN_HASHTABLE 8;
+
+#define NUM_LIST_IN_TABLE 8
 
 //parameter for the function get_list. MIN to return a random list with few items
 //MAX to return a list with many values
-#define MIN 0;  
-#define MAX 1;
+#define PUT 0
+#define GET 1
 
 typedef struct node {
 	void *item;
@@ -11,13 +12,21 @@ typedef struct node {
 } node_t;
 
 typedef struct list {
+	pthread_mutex_t llock;
+    int *count;
 	node_t	*head;
 	node_t	*tail;
+
 } list_t;
 
 typedef struct table {
-    list_t table[NUM_LIST_IN_HASHTABLE];
-    int num_items;
+    list_t *table[NUM_LIST_IN_TABLE];
+} table_t;
+
+//generate a random number in the range 0 to NUM_LIST_IN_TABLE
+int random_int(int max) {
+    srand((unsigned)time(NULL));
+    return (rand() % max);
 }
 /* table_init initializes a new table */
 void table_init(table_t *t);
@@ -27,3 +36,6 @@ void table_put(table_t *t, void *item);
 
 /* table_get removes and returns the head of the table in item */
 void *table_get(table_t *t);
+
+/* get_list return index of a list tu put or get an item from*/
+list_t *get_list(table_t *t, int mode);
