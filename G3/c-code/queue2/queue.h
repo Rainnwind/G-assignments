@@ -48,8 +48,22 @@ void queue_init_list_t(list_t *list);
  */
 void queue_put_list_t(list_t *list, void *item);
 
+/**
+ * Collects the first item that's is not NULL and obtained by a lock
+ * Returns pointer to item on success other NULL
+ *
+ * @list is the list that is taken an item from
+ */
 void *queue_get_list_t(list_t *list);
 
+/**
+ * This is called by queue_put_list_t when it fails to insert an item into the list
+ * It expands the array in the list_t object by a factor of 2 i.e. size 2 is becomes 4, 4 becomes 8 and so on
+ * When this function has ended it will call queue_put_list_t in order to put in the item it failed to stock in the array
+ *
+ * @list is the list that must be expanded
+ * @item is the object that was not put into the list
+ */
 void queue_expand_list_t(list_t *list, void *item);
 
 #endif //QUEUE_GUARD
