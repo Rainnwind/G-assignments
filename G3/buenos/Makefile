@@ -157,7 +157,6 @@ rundisk = fyams-sim buenos initprog=[disk]$(prog)
 semaphore: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
 
-
 .PHONY: clean
 .PHONY: doc
 .PHONY: submit-archive buenos-g1.tar.gz
