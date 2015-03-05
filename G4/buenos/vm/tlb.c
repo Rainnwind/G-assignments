@@ -54,7 +54,16 @@ void tlb_load_exception(void) {
 }
 
 void tlb_store_exception(void) {
-    tlb_fill(thread_get_current_thread_entry()->pagetable);
+   tlb_exception_state_t tes;
+   _tlb_get_exception_state(&tes);
+
+   kprintf("TLB exception. Details:\n"
+           "Failed Virtual Address: 0x%8.8x\n"
+           "Virtual Page Number:    0x%8.8x\n"
+           "ASID (Thread number):   %d\n",
+           tes.badvaddr, tes.badvpn2, tes.asid);
+
+//    tlb_fill(thread_get_current_thread_entry()->pagetable);
     KERNEL_PANIC("Unhandled TLB store exception 3");
 }
 
