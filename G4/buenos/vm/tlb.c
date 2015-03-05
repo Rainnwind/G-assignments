@@ -54,15 +54,39 @@ void tlb_load_exception(void) {
 }
 
 void tlb_store_exception(void) {
-   tlb_exception_state_t tes;
-   _tlb_get_exception_state(&tes);
+   tlb_exception_state_t exception_state;
+   tlb_exception_state_t state;
 
+   //Getting exception state
+   _tlb_get_exception_state(&exception_state);
+
+   // Debugging
    kprintf("TLB exception. Details:\n"
            "Failed Virtual Address: 0x%8.8x\n"
            "Virtual Page Number:    0x%8.8x\n"
            "ASID (Thread number):   %d\n",
-           tes.badvaddr, tes.badvpn2, tes.asid);
+           exception_state.badvaddr, exception_state.badvpn2, exception_state.asid);
 
+   //Copying exception state to state
+   state.badvaddr = exception_state.badvaddr;
+   state.badvpn2 = exception_state.badvpn2;
+   state.asid = exception_state.asid;
+
+   //Removing annoyance - Tmp
+   state = state;
+   spinlock_acquire(&thread_table_slock);
+   for (int i = 0; i < CONFIG_MAX_THREADS; i++) {
+        if (thread_table[i].pagetable != NULL) {
+            kprintf("ASID OF [%d]: %d\n", i, thread_table[i].pagetable->ASID);
+        }
+   }
+   spinlock_release(&thread_table_slock);
+
+   kprintf("ASID from thread: %d\n", thread_get_current_thread_entry()->pagetable->ASID);
+   kprintf("valid_count from thread: %d\n", thread_get_current_thread_entry()->pagetable->valid_count);
+
+   _tlb_set_asid(state.asid);
+   _tlb_write_random(thread_get_current_thread_entry()->pagetable->entries);
 //    tlb_fill(thread_get_current_thread_entry()->pagetable);
     KERNEL_PANIC("Unhandled TLB store exception 3");
 }
