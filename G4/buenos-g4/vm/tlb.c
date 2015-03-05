@@ -38,6 +38,7 @@
 #include "kernel/assert.h"
 #include "vm/tlb.h"
 #include "vm/pagetable.h"
+#include "lib/debug.h"
 
 void tlb_modified_exception(void)
 {
@@ -51,7 +52,22 @@ void tlb_load_exception(void)
 
 void tlb_store_exception(void)
 {
-    KERNEL_PANIC("Unhandled TLB store exception");
+    tlb_exception_state_t exception;
+    exception.badvaddr = 0;
+    if(exception.badvaddr == 0){
+        DEBUG("debuginit", "exception state was NULL\n");
+    } else {
+        DEBUG("debuginit", "exception state was not NULL\n");
+    }
+
+    DEBUG("debuginit", "call _tlb_get_exception\n");
+    _tlb_get_exception_state(&exception);
+
+    if(exception.badvaddr == 0){
+        DEBUG("debuginit", "exception state was NULL\n");
+    } else {
+        DEBUG("debuginit", "exception state was not NULL\n");
+    }
 }
 
 /**

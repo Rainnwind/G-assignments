@@ -76,7 +76,8 @@ void user_exception_handle(int exception)
 	KERNEL_PANIC("TLB Load: not handled yet");
 	break;
     case EXCEPTION_TLBS:
-	KERNEL_PANIC("TLB Store: not handled yet");
+        tlb_store_exception();
+//	KERNEL_PANIC("TLB Store: not handled yet");
 	break;
     case EXCEPTION_ADDRL:
 	KERNEL_PANIC("Address Error Load: not handled yet");

@@ -144,9 +144,9 @@ real-clean: clean
 
 # Make command for G4
 prog = readwrite
-prog2 = exec.c
-prog3 = exec_child1
-prog4 = exec_child2
+prog2 = procTest
+prog3 = test1
+prog4 = test2
 cleardisk = if [ -f fyams.harddisk ] ; \
     then \
         rm fyams.harddisk; \
@@ -154,7 +154,7 @@ cleardisk = if [ -f fyams.harddisk ] ; \
 maketests = make -C tests/
 createdisk = util/tfstool create fyams.harddisk 2048 disk
 writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) &&  util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)  &&  util/tfstool write fyams.harddisk tests/$(prog4) $(prog4)
-rundisk = fyams-sim buenos initprog=[disk]$(prog)
+rundisk = fyams-sim buenos initprog=[disk]$(prog2) debuginit
 process: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
 
