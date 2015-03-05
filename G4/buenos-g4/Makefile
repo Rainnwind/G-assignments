@@ -124,10 +124,10 @@ tags: ctags etags
 $(SRC):
 	@true
 
-# Builds the buenos-g3.tar.gz to the parent directory!
+# Builds the buenos-g4.tar.gz to the parent directory!
 # This target includes docs. Do not use this for submission
-buenos-g3.tar.gz: $(SRC)
-	(cd ..; find buenos-g3 -type f | grep -Ev '[.]d$$' \
+buenos-g4.tar.gz: $(SRC)
+	(cd ..; find buenos-g4 -type f | grep -Ev '[.]d$$' \
 	        | grep -Ev '[.]gitignore' \
                 | xargs $(GTAR) cvf - | gzip >$@)
 
@@ -136,25 +136,26 @@ submit-archive: $(SRC)
 	(cd ..; $(GTAR) cf - buenos | gzip >submit-$(PHASE).tar.gz)
 
 clean:	utilclean
-	rm -f $(TARGET) $(OBJS) *~ */*~ buenos.map tags TAGS fyams.socket fyams.harddisk
+	rm -f $(TARGET) $(OBJS) *~ */*~ buenos.map tags TAGS fyams.socket
 
 real-clean: clean
 	rm -f $(DEPS)
 
 
-# Make command for G3
-prog = semaphore_test
-prog2 = semaphore_test2
-prog3 = semaphore_test3
+# Make command for G4
+prog = readwrite
+prog2 = procTest
+prog3 = test1
+prog4 = test2
 cleardisk = if [ -f fyams.harddisk ] ; \
-	then \
-		rm fyams.harddisk; \
-	fi;
+    then \
+        rm fyams.harddisk; \
+    fi;
 maketests = make -C tests/
 createdisk = util/tfstool create fyams.harddisk 2048 disk
-writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) && util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)
-rundisk = fyams-sim buenos initprog=[disk]$(prog)
-semaphore: all
+writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) &&  util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)  &&  util/tfstool write fyams.harddisk tests/$(prog4) $(prog4)
+rundisk = fyams-sim buenos initprog=[disk]$(prog2) debuginit
+process: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)
 
 .PHONY: clean
