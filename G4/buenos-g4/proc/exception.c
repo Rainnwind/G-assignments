@@ -73,10 +73,17 @@ void user_exception_handle(int exception)
 	KERNEL_PANIC("TLB Modification: not handled yet");
 	break;
     case EXCEPTION_TLBL:
-	KERNEL_PANIC("TLB Load: not handled yet");
+        _interrupt_enable();
+        tlb_load_exception();
+        _interrupt_disable();
+
+//	KERNEL_PANIC("TLB Load: not handled yet");
 	break;
     case EXCEPTION_TLBS:
+        _interrupt_enable();
         tlb_store_exception();
+        _interrupt_disable();
+
 //	KERNEL_PANIC("TLB Store: not handled yet");
 	break;
     case EXCEPTION_ADDRL:

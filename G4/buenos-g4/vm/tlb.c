@@ -39,6 +39,17 @@
 #include "vm/tlb.h"
 #include "vm/pagetable.h"
 #include "lib/debug.h"
+//added
+#include "kernel/spinlock.h"
+#include "kernel/config.h"
+#include "kernel/thread.h"
+#include "vm/vm.h"
+
+extern spinlock_t thread_table_slock;
+extern thread_table_t thread_table[CONFIG_MAX_THREADS];
+
+//extern spinlock_t thread_table_slock;
+//extern thread_table_t thread_table[CONFIG_MAX_THREADS];
 
 void tlb_modified_exception(void)
 {
@@ -47,27 +58,78 @@ void tlb_modified_exception(void)
 
 void tlb_load_exception(void)
 {
-    KERNEL_PANIC("Unhandled TLB load exception");
+   thread_table_t *my_entry;
+
+    tlb_exception_state_t state;
+    DEBUG("debuginit", "call _tlb_get_exception\n");
+
+    _tlb_get_exception_state(&state);
+
+    spinlock_acquire(&thread_table_slock);
+    my_entry = &(thread_table[state.asid]);
+
+    spinlock_release(&thread_table_slock);
+    kprintf("TLB exception. Details:\n"
+           "Failed Virtual Address: 0x%8.8x\n"
+           "Virtual Page Number:    0x%8.8x\n"
+           "ASID (Thread number):   %d\n"
+           , state.badvaddr, state.badvpn2, state.asid);
+
+    int found = 0;
+    int i;
+    for (i = 0; i < PAGETABLE_ENTRIES && found == 0; ++i)
+    {
+      if (my_entry->pagetable->entries[i].VPN2 == state.badvpn2)
+      {
+        _tlb_write_random(&(my_entry->pagetable->entries[i]));
+        found = 1;
+      }
+    }
+    if (found == 0)
+    {
+      KERNEL_PANIC("tlb entry was not found in pagetabke\n");
+    }
+    if (found == 1)
+    {
+      DEBUG("debuginit", "entry was found and updatet in tlb\n");
+    }
+    
 }
 
 void tlb_store_exception(void)
 {
-    tlb_exception_state_t exception;
-    exception.badvaddr = 0;
-    if(exception.badvaddr == 0){
-        DEBUG("debuginit", "exception state was NULL\n");
-    } else {
-        DEBUG("debuginit", "exception state was not NULL\n");
-    }
+   thread_table_t *my_entry;
 
+    tlb_exception_state_t state;
     DEBUG("debuginit", "call _tlb_get_exception\n");
-    _tlb_get_exception_state(&exception);
+    _tlb_get_exception_state(&state);
 
-    if(exception.badvaddr == 0){
-        DEBUG("debuginit", "exception state was NULL\n");
-    } else {
-        DEBUG("debuginit", "exception state was not NULL\n");
+    my_entry = thread_get_current_thread_entry();
+    kprintf("TLB exception. Details:\n"
+           "Failed Virtual Address: 0x%8.8x\n"
+           "Virtual Page Number:    0x%8.8x\n"
+           "ASID (Thread number):   %d\n",    
+           state.badvaddr, state.badvpn2, state.asid, my_entry->process_id);
+
+    int found = 0;
+    int i;
+    for (i = 0; i < PAGETABLE_ENTRIES && found == 0; ++i)
+    {
+      if (my_entry->pagetable->entries[i].VPN2 == state.badvpn2)
+      {
+        _tlb_write_random(&(my_entry->pagetable->entries[i]));
+        found = 1;
+      }
     }
+    if (found == 0)
+    {
+      KERNEL_PANIC("tlb entry was not found in pagetabke\n");
+    }
+    if (found == 1)
+    {
+      DEBUG("debuginit", "entry was found and updatet in tlb\n");
+    }
+   
 }
 
 /**
