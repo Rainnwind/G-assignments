@@ -114,7 +114,6 @@ void process_start(process_id_t pid) {
     KERNEL_ASSERT(elf.ro_pages + elf.rw_pages + CONFIG_USERLAND_STACK_SIZE
                   <= _tlb_get_maxindex() + 1);
 
-
     /* Allocate and map stack */
     for(i = 0; i < CONFIG_USERLAND_STACK_SIZE; i++) {
         phys_page = pagepool_get_phys_page();
@@ -144,7 +143,7 @@ void process_start(process_id_t pid) {
        pages fit into the TLB. After writing proper TLB exception
        handling this call should be skipped. */
 //    intr_status = _interrupt_disable();
-//    tlb_fill(my_entry->pagetable);
+//    tlb__fill(my_entry->pagetable);
 //    _interrupt_set_state(intr_status);
 
     /* Now we may use the virtual addresses of the segments. */
@@ -183,7 +182,7 @@ void process_start(process_id_t pid) {
 
     /* Insert page mappings again to TLB to take read-only bits into use */
 //    intr_status = _interrupt_disable();
-//    tlb_fill(my_entry->pagetable);
+//    tlb__fill(my_entry->pagetable);
 //    _interrupt_set_state(intr_status);
 
     /* Initialize the user context. (Status register is handled by

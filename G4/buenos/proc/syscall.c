@@ -124,6 +124,9 @@ void syscall_handle(context_t *user_context)
     case SYSCALL_JOIN:
         V0 = syscall_join((process_id_t) A1);
         break;
+    case SYSCALL_MEMLIMIT:
+        KERNEL_PANIC("LOL");
+        break;
     default:
         KERNEL_PANIC("Unhandled system call\n");
     }

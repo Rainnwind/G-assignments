@@ -73,6 +73,7 @@ typedef struct {
 
 /* Only a process' parent should be able to interface with it. */
     process_id_t parent;
+    void *head_end;
 } process_control_block_t;
 
 void process_start(process_id_t pid);

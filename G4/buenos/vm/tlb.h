@@ -97,7 +97,6 @@ void tlb_store_exception(void);
 
 /* Forward declare pagetable_t (== struct pagetable_struct_t) */
 struct pagetable_struct_t;
-void tlb_fill(struct pagetable_struct_t *pagetable);
 
 /* assembler function wrappers */
 void _tlb_get_exception_state(tlb_exception_state_t *state);

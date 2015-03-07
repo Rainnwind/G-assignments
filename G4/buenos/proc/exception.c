@@ -69,49 +69,49 @@ void user_exception_handle(int exception)
     my_entry->user_context = my_entry->context;
 
     switch(exception) {
-        case EXCEPTION_TLBM:
-            tlb_modified_exception();
-            break;
-        case EXCEPTION_TLBL:
-            tlb_load_exception();
-            break;
-        case EXCEPTION_TLBS:
-            tlb_store_exception();
-            break;
-        case EXCEPTION_ADDRL:
-            KERNEL_PANIC("Address Error Load: not handled yet");
-            break;
-        case EXCEPTION_ADDRS:
-            KERNEL_PANIC("Address Error Store: not handled yet");
-            break;
-        case EXCEPTION_BUSI:
-            KERNEL_PANIC("Bus Error Instruction: not handled yet");
-            break;
-        case EXCEPTION_BUSD:
-            KERNEL_PANIC("Bus Error Data: not handled yet");
-            break;
-        case EXCEPTION_SYSCALL:
-            _interrupt_enable();
-            syscall_handle(my_entry->user_context);
-            _interrupt_disable();
-           break;
-        case EXCEPTION_BREAK:
-            KERNEL_PANIC("Breakpoint: not handled yet");
-            break;
-        case EXCEPTION_RESVI:
-            KERNEL_PANIC("Reserved instruction: not handled yet");
-            break;
-        case EXCEPTION_COPROC:
-            KERNEL_PANIC("Coprocessor unusable: buggy assembler code?");
-            break;
-        case EXCEPTION_AOFLOW:
-            KERNEL_PANIC("Arithmetic overflow: buggy assembler code?");
-            break;
-        case EXCEPTION_TRAP:
-            KERNEL_PANIC("Trap: this just should not happen");
-            break;
-        default:
-           KERNEL_PANIC("Unknown exception");
+    case EXCEPTION_TLBM:
+        tlb_modified_exception();
+	break;
+    case EXCEPTION_TLBL:
+	   tlb_load_exception();
+    break;
+    case EXCEPTION_TLBS:
+    tlb_store_exception();
+	break;
+    case EXCEPTION_ADDRL:
+	KERNEL_PANIC("Address Error Load: not handled yet");
+	break;
+    case EXCEPTION_ADDRS:
+	KERNEL_PANIC("Address Error Store: not handled yet");
+	break;
+    case EXCEPTION_BUSI:
+	KERNEL_PANIC("Bus Error Instruction: not handled yet");
+	break;
+    case EXCEPTION_BUSD:
+	KERNEL_PANIC("Bus Error Data: not handled yet");
+	break;
+    case EXCEPTION_SYSCALL:
+        _interrupt_enable();
+        syscall_handle(my_entry->user_context);
+        _interrupt_disable();
+	break;
+    case EXCEPTION_BREAK:
+	KERNEL_PANIC("Breakpoint: not handled yet");
+	break;
+    case EXCEPTION_RESVI:
+	KERNEL_PANIC("Reserved instruction: not handled yet");
+	break;
+    case EXCEPTION_COPROC:
+	KERNEL_PANIC("Coprocessor unusable: buggy assembler code?");
+	break;
+    case EXCEPTION_AOFLOW:
+	KERNEL_PANIC("Arithmetic overflow: buggy assembler code?");
+	break;
+    case EXCEPTION_TRAP:
+	KERNEL_PANIC("Trap: this just should not happen");
+	break;
+    default:
+	KERNEL_PANIC("Unknown exception");
     }
 
     /* Interrupts are disabled by setting EXL after this point. */

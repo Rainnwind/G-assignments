@@ -38,80 +38,93 @@
 #include "kernel/assert.h"
 #include "vm/tlb.h"
 #include "vm/pagetable.h"
-#include "kernel/spinlock.h"
-#include "kernel/config.h"
 #include "kernel/thread.h"
-#include "vm/vm.h"
+#include "kernel/config.h"
+#include "kernel/spinlock.h"
+#include "proc/process.h"
 
+/* Import thread table and its lock from thread.c */
 extern spinlock_t thread_table_slock;
 extern thread_table_t thread_table[CONFIG_MAX_THREADS];
+/* Import process table and its lock from process.c */
+extern process_control_block_t process_table[PROCESS_MAX_PROCESSES];
+extern spinlock_t process_table_slock;
 
-void tlb_modified_exception(void) {
-    KERNEL_PANIC("Unhandled TLB modified exception 1");
+/* Check whether given (virtual) address is even or odd mapping
+   in a pair of mappings for TLB. */
+#define ADDR_IS_ON_EVEN_PAGE(addr) (!((addr) & 0x00001000))
+#define ADDR_IS_ON_ODD_PAGE(addr)  ((addr) & 0x00001000)
+
+
+void tlb_finish_process(TID_t id) {
+    //Setting the return value to -1 to indicate error
+    spinlock_acquire(&process_table_slock);
+    process_table[thread_table[id].process_id].retval = -1;
+    spinlock_release(&process_table_slock);
+
+    //Setting current address to thread finish - This will kill the thread and process
+    spinlock_acquire(&thread_table_slock);
+    thread_table[id].context->pc = thread_table[id].context->cpu_regs[MIPS_REGISTER_RA];
+    spinlock_release(&thread_table_slock);
 }
 
-void tlb_load_exception(void) {
-    KERNEL_PANIC("Unhandled TLB load exception 2");
-}
-
-void tlb_store_exception(void) {
-    tlb_exception_state_t exception_state;
-
-    //Getting exception state
-    _tlb_get_exception_state(&exception_state);
-
-    // Debugging
-    kprintf("TLB exception. Details:\n"
-            "Failed Virtual Address: 0x%8.8x\n"
-            "Virtual Page Number:    0x%8.8x\n"
-            "ASID (Thread number):   %d\n",
-            exception_state.badvaddr, exception_state.badvpn2, exception_state.asid);
-
-
-
-    kprintf("ASID from thread: %d\n", thread_get_current_thread_entry()->pagetable->ASID);
-    kprintf("valid_count from thread: %d\n", thread_get_current_thread_entry()->pagetable->valid_count);
-    kprintf("virtual address: %d\n", exception_state.badvaddr);
-    kprintf("Virtual page number: %d\n", exception_state.badvpn2);
-    kprintf("ADDR_KERNEL_TO_PHYS(): %d\n", ADDR_KERNEL_TO_PHYS(exception_state.badvaddr));
-    kprintf("ADDR_PHYS_TO_KERNEL(): %d\n", ADDR_PHYS_TO_KERNEL(exception_state.badvaddr));
-
-    if (thread_get_current_thread_entry()->pagetable == NULL) {
-        kprintf("It's a KERNEL thread only\n");
-    } else {
-        kprintf("It's a userland thread\n");
-    }
-    int index = _tlb_probe(thread_get_current_thread_entry()->pagetable->entries);
-    if (index < 0) {
-        kprintf("thread_id: %d, index: %d\n", thread_get_current_thread(), index);
-        _tlb_write_random(thread_get_current_thread_entry()->pagetable->entries);
-//        KERNEL_PANIC("index less than zero OMG!\n");
-    }
-}
-
-/**
- * Fill TLB with given pagetable. This function is used to set memory
- * mappings in CP0's TLB before we have a proper TLB handling system.
- * This approach limits the maximum mapping size to 128kB.
- *
- * @param pagetable Mappings to write to TLB.
- *
- */
-
-void tlb_fill(pagetable_t *pagetable)
+void tlb_modified_exception(void)
 {
-    if(pagetable == NULL)
-	return;
+    tlb_exception_state_t err_state;
+   _tlb_get_exception_state(&err_state);
+    pagetable_t *pagetable;
 
-    /* Check that the pagetable can fit into TLB. This is needed until
-     we have proper VM system, because the whole pagetable must fit
-     into TLB. */
-    KERNEL_ASSERT(pagetable->valid_count <= (_tlb_get_maxindex()+1));
+    pagetable = thread_get_current_thread_entry()->pagetable;
+    if (pagetable == NULL) {
+        KERNEL_PANIC("No pagetable in this thread!");
+    }
 
-    _tlb_write(pagetable->entries, 0, pagetable->valid_count);
+    //Kernel threads have no pagetable, in case KERNEL_PANIC is not called we assume it's a user process and terminate the process
+    tlb_finish_process(err_state.asid);
+}
 
-    /* Set ASID field in Co-Processor 0 to match thread ID so that
-       only entries with the ASID of the current thread will match in
-       the TLB hardware. */
-    _tlb_set_asid(pagetable->ASID);
+void tlb_load_exception(void)
+{
+    //It's supposed to do the exact same thing as tlb_store_exception
+    tlb_store_exception();
+}
+
+void tlb_store_exception(void)
+{
+    tlb_exception_state_t err_state;
+   _tlb_get_exception_state(&err_state);
+
+    pagetable_t *pagetable;
+
+    pagetable = thread_get_current_thread_entry()->pagetable;
+    if (pagetable == NULL) {
+        KERNEL_PANIC("No pagetable in this thread!");
+    }
+
+
+    //Fetches an index from `global` tlb
+    for (int i = 0; i < PAGETABLE_ENTRIES; i++) {
+        if (pagetable->entries[i].ASID == err_state.asid && pagetable->entries[i].VPN2 == err_state.badvpn2) {
+            //Testing if page is even or odd
+            //Then checking if page is valid
+            if (ADDR_IS_ON_EVEN_PAGE(err_state.badvaddr)) {
+                if (pagetable->entries[i].V0 == 0) {
+                    tlb_finish_process(pagetable->entries[i].ASID);
+                    return;
+                }
+            } else if (ADDR_IS_ON_ODD_PAGE(err_state.badvaddr)) {
+                if (pagetable->entries[i].V1 == 0) {
+                    tlb_finish_process(pagetable->entries[i].ASID);
+                    return;
+                }
+            } else {
+                KERNEL_PANIC("ADDRESS NOT RECOGNIZED!");
+            }
+            _tlb_write_random(&pagetable->entries[i]);
+            return;
+        }
+    }
+
+    //In case the TLB was not found in the thread - We handle this as an access violation an terminate the process
+    tlb_finish_process(err_state.asid);
 }
