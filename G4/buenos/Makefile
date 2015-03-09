@@ -144,13 +144,14 @@ real-clean: clean
 # Make command for G4
 prog = TLB_test
 prog2 = faul_addr_test
+prog3 = no_fault_addr
 cleardisk = if [ -f fyams.harddisk ] ; \
 	then \
 		rm fyams.harddisk; \
 	fi;
 maketests = make -C tests/
 createdisk = util/tfstool create fyams.harddisk 2048 disk
-writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2)
+writedisk = util/tfstool write fyams.harddisk tests/$(prog) $(prog) && util/tfstool write fyams.harddisk tests/$(prog2) $(prog2) && util/tfstool write fyams.harddisk tests/$(prog3) $(prog3)
 rundisk = fyams-sim buenos initprog=[disk]$(prog)
 TLB_test: all
 	$(cleardisk) $(maketests) && $(createdisk) && $(writedisk) && $(rundisk)

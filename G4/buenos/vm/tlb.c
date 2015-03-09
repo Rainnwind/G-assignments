@@ -35,20 +35,10 @@
  */
 
 #include "kernel/panic.h"
-#include "kernel/assert.h"
 #include "vm/tlb.h"
-#include "vm/pagetable.h"
 #include "kernel/thread.h"
-#include "kernel/config.h"
-#include "kernel/spinlock.h"
 #include "proc/process.h"
 
-/* Import thread table and its lock from thread.c */
-extern spinlock_t thread_table_slock;
-extern thread_table_t thread_table[CONFIG_MAX_THREADS];
-/* Import process table and its lock from process.c */
-extern process_control_block_t process_table[PROCESS_MAX_PROCESSES];
-extern spinlock_t process_table_slock;
 
 /* Check whether given (virtual) address is even or odd mapping
    in a pair of mappings for TLB. */
@@ -56,22 +46,8 @@ extern spinlock_t process_table_slock;
 #define ADDR_IS_ON_ODD_PAGE(addr)  ((addr) & 0x00001000)
 
 
-void tlb_finish_process(TID_t id) {
-    //Setting the return value to -1 to indicate error
-    spinlock_acquire(&process_table_slock);
-    process_table[thread_table[id].process_id].retval = -1;
-    process_table[thread_table[id].process_id].state = "PROCESS_ZOMBIE";
-    spinlock_release(&process_table_slock);
-
-    //Setting current address to thread finish - This will kill the thread and process
-    spinlock_acquire(&thread_table_slock);
-    thread_table[id].context->pc = thread_table[id].context->cpu_regs[MIPS_REGISTER_RA];
-    spinlock_release(&thread_table_slock);
-}
-
 void tlb_modified_exception(void)
 {
-    kprintf("tlb_modified_exception\n");
     tlb_exception_state_t err_state;
    _tlb_get_exception_state(&err_state);
     pagetable_t *pagetable;
@@ -82,19 +58,17 @@ void tlb_modified_exception(void)
     }
 
     //Kernel threads have no pagetable, in case KERNEL_PANIC is not called we assume it's a user process and terminate the process
-    tlb_finish_process(err_state.asid);
+    process_finish(-1);
 }
 
 void tlb_load_exception(void)
 {
-    kprintf("tlb_store_exception\n");
     //It's supposed to do the exact same thing as tlb_store_exception
     tlb_store_exception();
 }
 
 void tlb_store_exception(void)
 {
-    kprintf("tlb_load_exception\n");
     tlb_exception_state_t err_state;
    _tlb_get_exception_state(&err_state);
 
@@ -113,12 +87,12 @@ void tlb_store_exception(void)
             //Then checking if page is valid
             if (ADDR_IS_ON_EVEN_PAGE(err_state.badvaddr)) {
                 if (pagetable->entries[i].V0 == 0) {
-                    tlb_finish_process(pagetable->entries[i].ASID);
+                    process_finish(-1);
                     return;
                 }
             } else if (ADDR_IS_ON_ODD_PAGE(err_state.badvaddr)) {
                 if (pagetable->entries[i].V1 == 0) {
-                    tlb_finish_process(pagetable->entries[i].ASID);
+                    process_finish(-1);
                     return;
                 }
             } else {
@@ -131,5 +105,5 @@ void tlb_store_exception(void)
     }
 
     //In case the TLB was not found in the thread - We handle this as an access violation an terminate the process
-    tlb_finish_process(err_state.asid);
+    process_finish(-1);
 }
